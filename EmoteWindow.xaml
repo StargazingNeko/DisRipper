@@ -1,0 +1,31 @@
+﻿<Window x:Class="DisEmoteRipper.EmoteWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DisEmoteRipper"
+        mc:Ignorable="d"
+        Title="EmoteWindow" Height="550" Width="800" MaxHeight="550">
+    <StackPanel>
+        <Grid MaxHeight="400" Height="400">
+            <ScrollViewer x:Name="EmoteScroller" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" ScrollChanged="EmoteScroller_ScrollChanged">
+                <WrapPanel x:Name="EmotePanel" Margin="5,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Orientation="Horizontal"/>
+            </ScrollViewer>
+        </Grid>
+        <Grid>
+            <StackPanel VerticalAlignment="Bottom" Orientation="Vertical" Margin="10,0,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <ProgressBar x:Name="EmoteProgress" HorizontalAlignment="Left" Height="10" Width="100"/>
+                    <Label x:Name="EmoteLabel" Content="Emotes (0)" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <ProgressBar x:Name="GuildProgress" HorizontalAlignment="Left" Height="10" Width="100"/>
+                    <Label x:Name="GuildLabel" Content="Servers (0)" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                </StackPanel>
+                <Button x:Name="DownloadButton" Content=" Download " HorizontalAlignment="Left" Click="DownloadButton_Click"/>
+                <Button x:Name="TestButton" Content=" test " Click="TestButton_Click"/>
+            </StackPanel>
+
+        </Grid>
+    </StackPanel>
+</Window>

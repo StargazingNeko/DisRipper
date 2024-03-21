@@ -1,0 +1,20 @@
+﻿<Window x:Class="DisEmoteRipper.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DisEmoteRipper"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="490" Width="1285" Closing="Window_Closing">
+    <Grid>
+        <PasswordBox x:Name="TokenBox" HorizontalAlignment="Left" Margin="940,406,0,0" VerticalAlignment="Top" Width="255"/>
+        <Button x:Name="TokenButton" Content=" Set Token " HorizontalAlignment="Left" Margin="1200,405,0,0" VerticalAlignment="Top" Click="TokenButton_Click"/>
+        <TextBox x:Name="ResponseBox" HorizontalAlignment="Left" Margin="940,10,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="330" Height="380" IsReadOnly="True"/>
+        <TextBox x:Name="GuildID" HorizontalAlignment="Left" Margin="10,405,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="250"/>
+
+        <Button x:Name="GetAllEmotesButton" Content=" Get All Emotes " HorizontalAlignment="Left" Margin="338,405,0,0" VerticalAlignment="Top" Click="GetAllEmotes_Click"/>
+        <Button x:Name="GetGuildButton" Content=" Get Guild " HorizontalAlignment="Left" Margin="265,405,0,0" VerticalAlignment="Top" Click="GetGuildButton_Click"/>
+        <DataGrid x:Name="GuildGrid" HorizontalAlignment="Left" Margin="15,10,0,0" VerticalAlignment="Top" Width="920" Height="380" IsReadOnly="True" MouseDoubleClick="GuildGrid_MouseDoubleClick" SelectionChanged="GuildGrid_SelectionChanged"/>
+
+    </Grid>
+</Window>
