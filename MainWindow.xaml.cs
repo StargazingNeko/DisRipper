@@ -83,7 +83,6 @@ namespace DisEmoteRipper
                 foreach (var item in GuildList)
                 {
                     ResponseBox.Text = $"{ResponseBox.Text}{item.Get}\n";
-                    databaseHandler.Write(item.ID, item.Name, false);
 
                 }
 
@@ -125,10 +124,33 @@ namespace DisEmoteRipper
 
             emoteWindow.SetEmoteCount(Guild["emojis"].ToList().Count+Guild["stickers"].ToList().Count);
             emoteWindow.SetCurrentGuild((ulong)Guild["id"], (string)Guild["name"]);
+            MemoryStream? ms;
+            string Ext = string.Empty;
             foreach (JToken e in Guild["emojis"])
             {
-                await emoteWindow.AddEmote((ulong)e["id"], NamingUtility.ReplaceInvalidFilename($"{e["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", "").Replace(" ", "")} {e["animated"]}", "_"));
+                Ext = ".webp";
+                if ((bool)e["animated"] == true)
+                    Ext = ".gif";
+
+                HttpResponseMessage? response = httpHandler?.SendRequest((ulong)e["id"], false);
+
+                if (response?.StatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    using (FileStream fs = File.OpenRead("Error.bmp"))
+                    {
+                        ms = new MemoryStream((byte)fs.Length);
+                        fs.CopyTo(ms);
+                    }
+                }
+                else
+                {
+                    ms = response.Content?.ReadAsStreamAsync().Result as MemoryStream;
+                }
+
+                await emoteWindow.AddImage((ulong)Guild["id"], NamingUtility.ReplaceInvalidFilename(Guild["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", ""), "_"), (ulong)e["id"], NamingUtility.ReplaceInvalidFilename($"{e["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", "").Replace(" ", "")}", "_"), Ext, false, ms as MemoryStream);
+
                 emoteWindow.IncreaseEmoteProgress();
+                await Task.Delay(1);
             }
 
             foreach(JToken s in Guild["stickers"])
@@ -137,8 +159,29 @@ namespace DisEmoteRipper
                 if ((int)s["format_type"] == 2)
                     bIsAnimated = true;
 
-                await emoteWindow.AddSticker((ulong)s["id"], NamingUtility.ReplaceInvalidFilename($"{NamingUtility.CleanName(s["name"].ToString())} {bIsAnimated}", "_"));
+                HttpResponseMessage? response = httpHandler?.SendRequest((ulong)s["id"], true);
+
+                if (response?.StatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    using (FileStream fs = File.OpenRead("Error.bmp"))
+                    {
+                        ms = new MemoryStream((byte)fs.Length);
+                        fs.CopyTo(ms);
+                    }
+                }
+                else
+                {
+                    Ext = ".png";
+                    if(bIsAnimated)
+                    {
+                        Ext = ".gif";
+                    }
+                    ms = response.Content?.ReadAsStreamAsync().Result as MemoryStream;
+                }
+
+                await emoteWindow.AddImage((ulong)Guild["id"], NamingUtility.ReplaceInvalidFilename(Guild["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", ""), "_"), (ulong)s["id"], NamingUtility.ReplaceInvalidFilename($"{s["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", "").Replace(" ", "")}", "_"), Ext, true, ms);
                 emoteWindow.IncreaseEmoteProgress();
+                await Task.Delay(1000);
             }
 
             emoteWindow.ResetEmoteCount();
@@ -186,10 +229,17 @@ namespace DisEmoteRipper
                 await GetEmotes(GuildID);
             }
 
-            emoteWindow.BeginDrawing();
         }
 
-        private void GetGuildButton_Click(object sender, RoutedEventArgs e) => GetGuild(Convert.ToUInt64(GuildID));
+        private async void GetGuildButton_Click(object sender, RoutedEventArgs e)
+        {
+            Structs.GuildInfo guildInfo = new Structs.GuildInfo();
+            JObject? Guild = GetGuild(Convert.ToUInt64(GuildID.Text));
+            if (Guild == null)
+                return;
+
+            await EmoteWindow((ulong)Guild["id"]);
+        }
 
         private async void GuildGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {

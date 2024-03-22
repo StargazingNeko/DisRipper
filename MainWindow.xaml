@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DisEmoteRipper"
         mc:Ignorable="d"
-        Title="MainWindow" Height="490" Width="1285" Closing="Window_Closing">
+        Title="MainWindow" Height="490" Width="1300" Closing="Window_Closing">
     <Grid>
         <PasswordBox x:Name="TokenBox" HorizontalAlignment="Left" Margin="940,406,0,0" VerticalAlignment="Top" Width="255"/>
         <Button x:Name="TokenButton" Content=" Set Token " HorizontalAlignment="Left" Margin="1200,405,0,0" VerticalAlignment="Top" Click="TokenButton_Click"/>

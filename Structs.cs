@@ -11,13 +11,13 @@ namespace DisEmoteRipper
     {
         public struct Img
         {
-            public string GuildName { get; set; }
             public ulong GuildId { get; set; }
-            public string Name { get; set; }
+            public string GuildName { get; set; }
             public ulong Id { get; set; }
+            public string Name { get; set; }
             public string Extension { get; set; }
             public bool IsSticker { get; set; }
-            public MemoryStream stream { get; set; }
+            public MemoryStream Stream { get; set; }
         }
 
         public struct Discord

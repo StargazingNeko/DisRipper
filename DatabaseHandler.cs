@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
+using System.Data.Common;
+using System.Data.SqlClient;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media.Animation;
+using System.Xml.Linq;
 
 namespace DisEmoteRipper
 {
@@ -47,8 +52,66 @@ namespace DisEmoteRipper
                         break;
                 }
 
-                command.ExecuteNonQuery();
+                await command.ExecuteNonQueryAsync();
             }
+
+            await _connection.CloseAsync();
+        }
+
+        public async Task CreateTable(string GuildName)
+        {
+            await _connection.OpenAsync();
+
+            using(SQLiteCommand command = _connection.CreateCommand())
+            {
+                command.CommandText = $"CREATE TABLE IF NOT EXISTS \"{GuildName}\" (GuildId ULONG NOT NULL, GuildName TEXT NOT NULL, Id ULONG NOT NULL, Name TEXT NOT NULL, Extension TEXT NOT NULL, IsSticker BOOLEAN NOT NULL, Stream BLOB NOT NULL, Exported BOOLEAN NOT NULL)";
+                await command.ExecuteNonQueryAsync();
+            }
+
+            await _connection.CloseAsync();
+        }
+
+        public async Task<List<string>> GetTables()
+        {
+            await _connection.OpenAsync();
+            List<string> Tables = new List<string>();
+            using (SQLiteCommand command = _connection.CreateCommand())
+            {
+
+                command.CommandText = "SELECT name FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%'";
+                DbDataReader reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        Tables.Add(reader.GetString(i));
+                    }
+                }
+            }
+            await _connection.CloseAsync();
+            return Tables;
+        }
+
+        public async Task WriteEmotes(ulong GuildId, string GuildName, ulong EmoteId, string EmoteName, string Extension, bool IsSticker, MemoryStream Stream)
+        {
+            await _connection.OpenAsync();
+
+            using (SQLiteCommand command = _connection.CreateCommand())
+            {
+
+                command.CommandText = $"INSERT INTO \"{GuildName}\" VALUES ({GuildId}, \"{GuildName}\", {EmoteId}, \"{EmoteName}\", \"{Extension}\", {IsSticker}, @0, {false})";
+                SQLiteParameter parameter = new SQLiteParameter("@0", DbType.Binary);
+                parameter.Value = Stream.ToArray();
+                command.Parameters.Add(parameter);
+                await command.ExecuteNonQueryAsync();
+            }
+
+            await _connection.CloseAsync();
+        }
+
+        public async Task WriteGuilds()
+        {
+            await _connection.OpenAsync();
 
             await _connection.CloseAsync();
         }
@@ -60,7 +123,7 @@ namespace DisEmoteRipper
             using (SQLiteCommand command = _connection.CreateCommand())
             {
                 await _connection.OpenAsync();
-                command.CommandText = $"SELECT * FROM {TABLE}";
+                command.CommandText = $"SELECT * FROM \"{TABLE}\"";
 
                 using (var reader = command.ExecuteReader())
                 {
@@ -74,13 +137,39 @@ namespace DisEmoteRipper
                         img.Name = reader.GetValue(3).ToString();
                         img.Extension = reader.GetValue(4).ToString();
                         img.IsSticker = bool.Parse(reader.GetValue(5).ToString());
-                        img.stream = reader.GetValue(6) as MemoryStream;
+                        using (var readStream = reader.GetStream(6))
+                        {
+                            await readStream.CopyToAsync(img.Stream = new MemoryStream());
+                        }
                         list.Add(img);
                     }
                     await _connection.CloseAsync();
                     return list;
                 };
             }
+        }
+
+        private async Task<bool> TableExists(ulong GuildId)
+        {
+            if (_connection.State != ConnectionState.Open)
+                await _connection.OpenAsync();
+
+            using (SQLiteCommand command = _connection.CreateCommand())
+            {
+                using (SQLiteDataReader reader = command.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        reader.Close();
+                        await _connection.CloseAsync();
+                        return true;
+                    }
+
+                }
+            }
+
+            await _connection.CloseAsync();
+            return false;
         }
 
         public void Dispose()
