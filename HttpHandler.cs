@@ -14,7 +14,7 @@ namespace DisRipper
         private string? TestResponseString;
         private string DiscordEmoji = "https://cdn.discordapp.com/emojis/";
         private string DiscordSticker = "https://media.discordapp.net/stickers/";
-        private string Lossless = "?quality=lossless";
+        private string Lossless = "?quality=lossless&size=2048";
 
         public HttpHandler()
         {
