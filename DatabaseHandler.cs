@@ -12,7 +12,7 @@ using System.Windows;
 using System.Windows.Media.Animation;
 using System.Xml.Linq;
 
-namespace DisEmoteRipper
+namespace DisRipper
 {
     internal class DatabaseHandler
     {

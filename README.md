@@ -1,6 +1,6 @@
-﻿# DisEmoteRipper
+﻿# DisRipper
 
-This project is just another Discord Emote/Sticker stealer.
+This project is just another Discord Emote/Sticker stealer, possibly soundboards in the future too.
 
 Why?
 Cause fuck Discord, thats why. Emotes and stickers should be free.

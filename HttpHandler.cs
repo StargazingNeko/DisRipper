@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Windows;
 
-namespace DisEmoteRipper
+namespace DisRipper
 {
     public class HttpHandler
     {

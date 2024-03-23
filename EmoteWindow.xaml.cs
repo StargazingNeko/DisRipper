@@ -11,7 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace DisEmoteRipper
+namespace DisRipper
 {
     /// <summary>
     /// Interaction logic for EmoteWindow.xaml

@@ -5,7 +5,7 @@
     <TargetFramework>net8.0-windows7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
-    <StartupObject>DisEmoteRipper.App</StartupObject>
+    <StartupObject>DisRipper.App</StartupObject>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 

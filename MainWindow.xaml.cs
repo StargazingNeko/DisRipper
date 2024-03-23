@@ -12,7 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace DisEmoteRipper
+namespace DisRipper
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

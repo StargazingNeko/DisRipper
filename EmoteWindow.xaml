@@ -1,9 +1,9 @@
-﻿<Window x:Class="DisEmoteRipper.EmoteWindow"
+﻿<Window x:Class="DisRipper.EmoteWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:DisEmoteRipper"
+        xmlns:local="clr-namespace:DisRipper"
         mc:Ignorable="d"
         Title="EmoteWindow" Height="550" Width="800" MaxHeight="550">
     <StackPanel>
