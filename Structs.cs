@@ -18,11 +18,6 @@ namespace DisRipper
 
             public Img Create(ulong GuildId, string GuildName, ulong EmoteId, string EmoteName, string Extension, bool IsSticker, MemoryStream Stream) =>
                 new() { GuildId = GuildId, GuildName = GuildName, EmoteId = EmoteId, EmoteName = EmoteName, Extension = Extension, IsSticker = IsSticker, Stream = Stream };
-
-            public void ResetStreamPosition()
-            {
-                Stream.Position = 0;
-            }
         }
 
         public struct Discord

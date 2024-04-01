@@ -192,7 +192,7 @@ namespace DisRipper
                     return;
                 }
 
-                Item.ResetStreamPosition();
+                Item.Stream.Position = 0;
                 Item.Stream.CopyTo(fs);
             }
         }
