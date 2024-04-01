@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace DisRipper
@@ -104,6 +106,28 @@ namespace DisRipper
         internal string GetTestResponse()
         {
             return TestResponseString ?? string.Empty;
+        }
+
+        public async Task<JObject> GetGuild(ulong GuildId)
+        {
+            HttpResponseMessage? Response = SendRequest($"{discord.Guild}");
+            try
+            {
+                Response?.EnsureSuccessStatusCode();
+                if (Response != null || !String.IsNullOrEmpty(Response.Content.ReadAsStream().ToString()))
+                {
+                    JObject Guild = JObject.Parse(Response.Content.ReadAsStringAsync().Result);
+                    return Guild;
+                }
+
+                return null;
+            }
+            catch(HttpRequestException ex)
+            {
+                MessageBox.Show($"HttpHandler->GetGuild: {ex.HttpRequestError}");
+                return null;
+            }
+
         }
     }
 }

@@ -60,7 +60,7 @@ namespace DisRipper
 
             using(SQLiteCommand command = _connection.CreateCommand())
             {
-                command.CommandText = $"CREATE TABLE IF NOT EXISTS \"{GuildName}\" (GuildId ULONG NOT NULL, GuildName TEXT NOT NULL, Id ULONG NOT NULL, Name TEXT NOT NULL, Extension TEXT NOT NULL, IsSticker BOOLEAN NOT NULL, Stream BLOB NOT NULL, Exported BOOLEAN NOT NULL)";
+                command.CommandText = $"CREATE TABLE IF NOT EXISTS \"{GuildName}\" (GuildId ULONG NOT NULL, GuildName TEXT NOT NULL, EmoteId ULONG NOT NULL, EmoteName TEXT NOT NULL, Extension TEXT NOT NULL, IsSticker BOOLEAN NOT NULL, Stream BLOB NOT NULL, Exported BOOLEAN NOT NULL)";
                 await command.ExecuteNonQueryAsync();
             }
 
@@ -124,21 +124,23 @@ namespace DisRipper
                 using (var reader = command.ExecuteReader())
                 {
                     List<Structs.Img> list = new();
-                    Structs.Img img = new();
                     while (reader.Read())
                     {
-                        img.GuildId = Convert.ToUInt64(reader.GetValue(0));
-                        img.GuildName = reader.GetValue(1).ToString();
-                        img.Id = Convert.ToUInt64(reader.GetValue(2));
-                        img.Name = reader.GetValue(3).ToString();
-                        img.Extension = reader.GetValue(4).ToString();
-                        img.IsSticker = bool.Parse(reader.GetValue(5).ToString());
-                        using (var readStream = reader.GetStream(6))
+                        using Stream readStream = reader.GetStream(6);
+                        using (MemoryStream ms = new MemoryStream(new byte[readStream.Length], true))
                         {
-                            await readStream.CopyToAsync(img.Stream = new MemoryStream());
+                            await readStream.CopyToAsync(ms);
+                            list.Add(new Structs.Img().Create(Convert.ToUInt64(reader.GetValue(0)),
+                                reader.GetValue(1).ToString(),
+                                Convert.ToUInt64(reader.GetValue(2)),
+                                reader.GetValue(3).ToString(),
+                                reader.GetValue(4).ToString(),
+                                bool.Parse(reader.GetValue(5).ToString()),
+                                ms));
                         }
-                        list.Add(img);
                     }
+
+
                     await _connection.CloseAsync();
                     return list;
                 };

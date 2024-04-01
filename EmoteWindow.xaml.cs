@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -25,9 +27,9 @@ namespace DisRipper
         private BackgroundWorker GuildWorker;
         private int EmoteProgressCount = 0;
         private int GuildProgressCount = 0;
-        private bool bDrawImages = false;
         private Structs.GuildInfo CurrentGuild;
         private readonly DatabaseHandler db = new();
+        private readonly Utility utility = new Utility();
         #endregion
 
         public EmoteWindow()
@@ -77,7 +79,7 @@ namespace DisRipper
                 }
 
                 await db.CreateTable(img.GuildName);
-                await db.WriteEmotes(img.GuildId, img.GuildName, img.Id, img.Name, img.Extension, img.IsSticker, ms);
+                await db.WriteEmotes(img.GuildId, img.GuildName, img.EmoteId, img.EmoteName, img.Extension, img.IsSticker, ms);
 
                 DrawEmote(image);
             }
@@ -93,7 +95,7 @@ namespace DisRipper
             GuildLabel.Content = $"Servers ({GuildProgress.Value}/{GuildProgress.Maximum})";
         }
 
-        public void SetCurrentGuild(params dynamic[] currentGuild) { CurrentGuild.ID = currentGuild[0]; CurrentGuild.Name = currentGuild[1]; }
+        public void SetCurrentGuild(params dynamic[] currentGuild) { CurrentGuild = new Structs.GuildInfo().Create(currentGuild[0], currentGuild[1]); }
 
         private void DrawEmote(System.Windows.Controls.Image image)
         {
@@ -103,8 +105,8 @@ namespace DisRipper
 
         public async Task AddImage(ulong GuildId, string GuildName, ulong Id, string Name, string Extension, bool IsSticker, MemoryStream Stream)
         { 
-            ImageList.Add(new Structs.Img { GuildId = GuildId, GuildName = GuildName, Id = Id, Name = Name, Extension = Extension, IsSticker = IsSticker, Stream = Stream });
-            await Task.Delay(1); 
+            ImageList.Add(new Structs.Img().Create(GuildId, GuildName, Id, Name, Extension, IsSticker, Stream));
+            await Task.Delay(1);
         }
         
         public void ClearEmotesAndStickers() { Emotes.Clear(); Stickers.Clear(); ImageList.Clear(); EmotePanel.Children.Clear(); }
@@ -178,7 +180,7 @@ namespace DisRipper
 
         private void SaveImage(Structs.Img Item, string FileExtension, string Location)
         {
-            FileInfo fileInfo = new FileInfo(NamingUtility.ReplaceInvalidPath($"Downloads/{Item.GuildName}/{Location}/{Item.Name}{FileExtension}", "_"));
+            FileInfo fileInfo = new FileInfo(NamingUtility.ReplaceInvalidPath($"Downloads/{Item.GuildName}/{Location}/{Item.EmoteName}{FileExtension}", "_"));
             if(!Directory.Exists(fileInfo.DirectoryName))
                 Directory.CreateDirectory(fileInfo.DirectoryName);
 
@@ -189,14 +191,45 @@ namespace DisRipper
                     MessageBox.Show("Null Stream!");
                     return;
                 }
-                Item.Stream.Position = 0;
+
+                Item.ResetStreamPosition();
                 Item.Stream.CopyTo(fs);
             }
         }
 
-        private void Continue()
+        private async Task Continue()
         {
-            List<Structs.Img> i = db.ReadEmotes("Emotes").Result;
+            List<ulong> EmoteIds = new List<ulong>();
+            List<ulong> GuildIds = new List<ulong>();
+            List<string> Tables = await db.GetTables();
+            foreach(string Table in Tables)
+            {
+                foreach(Structs.Img Img in db.ReadEmotes(Table).Result)
+                {
+                    EmoteIds.Add(Img.EmoteId);
+                    GuildIds.Add(Img.GuildId);
+                }
+            }
+
+            if(Guilds == null)
+                throw new NullReferenceException("EmoteWindow->Continue(): Guilds is null.");
+
+            foreach (Structs.GuildInfo guild in Guilds)
+            {
+                JObject JGuild = httpHandler?.GetGuild(guild.Id)?.Result;
+                if (JGuild == null)
+                    throw new NullReferenceException("EmoteWindow->Continue(): JGuild is null.");
+
+                foreach(JToken Emote in JGuild["emotes"])
+                {
+                    if (!EmoteIds.Contains((ulong)Emote["id"]))
+                    {
+                        MemoryStream? ms = await httpHandler?.SendRequest((ulong)Emote["id"], false)?.Content.ReadAsStreamAsync() as MemoryStream;
+                        ImageList.Add(new Structs.Img().Create(guild.Id, guild.Name, (ulong)Emote["id"], (string)Emote["name"], utility.GetExtension((bool)Emote["animated"]), false, ms));
+                    }
+                }
+            }
+
         }
 
         bool AutoScroll;

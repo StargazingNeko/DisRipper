@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System.DirectoryServices;
+using System.Drawing.Printing;
+using System.IO;
 
 namespace DisRipper
 {
@@ -6,13 +8,21 @@ namespace DisRipper
     {
         public struct Img
         {
-            public ulong GuildId { get; set; }
-            public string GuildName { get; set; }
-            public ulong Id { get; set; }
-            public string Name { get; set; }
-            public string Extension { get; set; }
-            public bool IsSticker { get; set; }
-            public MemoryStream Stream { get; set; }
+            public ulong GuildId { readonly get; private set; }
+            public string GuildName { readonly get; private set; }
+            public ulong EmoteId { readonly get; private set; }
+            public string EmoteName { readonly get; private set; }
+            public string Extension { readonly get; private set; }
+            public bool IsSticker { readonly get; private set; }
+            public MemoryStream Stream { readonly get; private set; }
+
+            public Img Create(ulong GuildId, string GuildName, ulong EmoteId, string EmoteName, string Extension, bool IsSticker, MemoryStream Stream) =>
+                new() { GuildId = GuildId, GuildName = GuildName, EmoteId = EmoteId, EmoteName = EmoteName, Extension = Extension, IsSticker = IsSticker, Stream = Stream };
+
+            public void ResetStreamPosition()
+            {
+                Stream.Position = 0;
+            }
         }
 
         public struct Discord
@@ -25,26 +35,20 @@ namespace DisRipper
                 Guild = "/guilds/";
             }
 
-            public string Users { get; init; }
-            public string Self { get; init; }
-            public string Guilds { get; init; }
-            public string Guild { get; init; }
+            public readonly string Users { get; init; }
+            public readonly string Self { get; init; }
+            public readonly string Guilds { get; init; }
+            public readonly string Guild { get; init; }
         }
 
         public struct GuildInfo
         {
 
-            public ulong ID { get; set; }
-            public string Name { get; set; }
-            public readonly string Get { get { return $"{ID}: {Name},"; } }
+            public ulong Id { readonly get; private set; }
+            public string Name { readonly get; private set; }
+            public readonly string Get { get { return $"{Id}: {Name},"; } }
 
-            public GuildInfo Add(ulong id, string name)
-            {
-                ID = id;
-                Name = name;
-
-                return this;
-            }
+            public GuildInfo Create(ulong Id, string Name) => new GuildInfo { Id = Id, Name = Name };
         }
     }
 }

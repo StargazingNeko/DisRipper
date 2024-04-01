@@ -23,6 +23,7 @@ namespace DisRipper
         private readonly Structs.Discord discord;
         private ObservableCollection<Structs.GuildInfo>? GuildList;
         private DatabaseHandler databaseHandler = new();
+        private readonly Utility utility = new Utility();
 
         public MainWindow()
         {
@@ -71,7 +72,7 @@ namespace DisRipper
                 foreach (var item in response)
                 {
                     if (item != null && item["id"] != null && item["name"] != null)
-                        GuildList.Add(guildInfo.Add((ulong)item["id"], (string)item["name"]));
+                        GuildList.Add(guildInfo.Create((ulong)item["id"], (string)item["name"]));
                 }
 
                 ResponseBox.Clear();
@@ -98,7 +99,7 @@ namespace DisRipper
 
             foreach (var item in GuildList)
             {
-                await IterateEmotes(GetGuild(item.ID));
+                await IterateEmotes(GetGuild(item.Id));
                 emoteWindow.IncreaseGuildProgress();
                 await Task.Delay(250);
             }
@@ -124,9 +125,8 @@ namespace DisRipper
             string Ext = string.Empty;
             foreach (JToken e in Guild["emojis"])
             {
-                Ext = ".webp";
-                if ((bool)e["animated"] == true)
-                    Ext = ".gif";
+
+                Ext = utility.GetExtension((bool)e["animated"]);
 
                 HttpResponseMessage? response = httpHandler?.SendRequest((ulong)e["id"], false);
 
@@ -140,7 +140,10 @@ namespace DisRipper
                 }
                 else
                 {
-                    ms = response.Content?.ReadAsStreamAsync().Result as MemoryStream;
+                    MemoryStream ResponseStream = response.Content?.ReadAsStreamAsync().Result as MemoryStream;
+                    ms = new MemoryStream(0);
+                    ms.SetLength(ResponseStream.Length);
+                    ResponseStream.CopyTo(ms);
                 }
 
                 await emoteWindow.AddImage((ulong)Guild["id"], NamingUtility.ReplaceInvalidFilename(Guild["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", ""), "_"), (ulong)e["id"], NamingUtility.ReplaceInvalidFilename($"{e["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", "").Replace(" ", "")}", "_"), Ext, false, ms as MemoryStream);
@@ -151,10 +154,6 @@ namespace DisRipper
 
             foreach(JToken s in Guild["stickers"])
             {
-                bool bIsAnimated = false;
-                if ((int)s["format_type"] == 2)
-                    bIsAnimated = true;
-
                 HttpResponseMessage? response = httpHandler?.SendRequest((ulong)s["id"], true);
 
                 if (response?.StatusCode != System.Net.HttpStatusCode.OK)
@@ -167,11 +166,7 @@ namespace DisRipper
                 }
                 else
                 {
-                    Ext = ".png";
-                    if(bIsAnimated)
-                    {
-                        Ext = ".gif";
-                    }
+                    Ext = utility.GetExtension((int)s["format_type"]);
                     ms = response.Content?.ReadAsStreamAsync().Result as MemoryStream;
                 }
 
@@ -240,13 +235,13 @@ namespace DisRipper
         private async void GuildGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             Structs.GuildInfo guildInfo = (Structs.GuildInfo)GuildGrid.SelectedItem;
-            await EmoteWindow(guildInfo.ID);
+            await EmoteWindow(guildInfo.Id);
         }
 
         private void GuildGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             Structs.GuildInfo gid = (Structs.GuildInfo)GuildGrid.SelectedItem;
-            GuildID.Text = gid.ID.ToString();
+            GuildID.Text = gid.Id.ToString();
         }
 
     }
