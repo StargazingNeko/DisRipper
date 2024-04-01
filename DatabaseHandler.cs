@@ -126,20 +126,18 @@ namespace DisRipper
                     List<Structs.Img> list = new();
                     while (reader.Read())
                     {
-                        using Stream readStream = reader.GetStream(6);
-                        using (MemoryStream ms = new MemoryStream(new byte[readStream.Length], true))
-                        {
-                            await readStream.CopyToAsync(ms);
-                            list.Add(new Structs.Img().Create(Convert.ToUInt64(reader.GetValue(0)),
-                                reader.GetValue(1).ToString(),
-                                Convert.ToUInt64(reader.GetValue(2)),
-                                reader.GetValue(3).ToString(),
-                                reader.GetValue(4).ToString(),
-                                bool.Parse(reader.GetValue(5).ToString()),
-                                ms));
-                        }
-                    }
+                        Stream readStream = reader.GetStream(6);
+                        MemoryStream ms = new MemoryStream(new byte[readStream.Length], true);
+                        await readStream.CopyToAsync(ms);
+                        list.Add(new Structs.Img().Create(Convert.ToUInt64(reader.GetValue(0)),
+                            reader.GetValue(1).ToString(),
+                            Convert.ToUInt64(reader.GetValue(2)),
+                            reader.GetValue(3).ToString(),
+                            reader.GetValue(4).ToString(),
+                            bool.Parse(reader.GetValue(5).ToString()),
+                            ms));
 
+                    }
 
                     await _connection.CloseAsync();
                     return list;

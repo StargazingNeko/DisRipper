@@ -118,7 +118,6 @@ namespace DisRipper
             if (Guild == null)
                 return;
 
-
             emoteWindow.SetEmoteCount(Guild["emojis"].ToList().Count+Guild["stickers"].ToList().Count);
             emoteWindow.SetCurrentGuild((ulong)Guild["id"], (string)Guild["name"]);
             MemoryStream? ms;
@@ -172,7 +171,7 @@ namespace DisRipper
 
                 await emoteWindow.AddImage((ulong)Guild["id"], NamingUtility.ReplaceInvalidFilename(Guild["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", ""), "_"), (ulong)s["id"], NamingUtility.ReplaceInvalidFilename($"{s["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", "").Replace(" ", "")}", "_"), Ext, true, ms);
                 emoteWindow.IncreaseEmoteProgress();
-                await Task.Delay(1000);
+                await Task.Delay(1500);
             }
 
             emoteWindow.ResetEmoteCount();

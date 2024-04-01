@@ -124,10 +124,9 @@ namespace DisRipper
             GuildLabel.Content = $"Servers ({GuildProgress.Value}/{GuildProgress.Maximum})";
         }
 
-        private void DownloadButton_Click(object sender, RoutedEventArgs e)
+        private void ExportButton_Click(object sender, RoutedEventArgs e)
         {
             ImageList.Clear();
-
 
             foreach (string table in db.GetTables().Result)
             {
@@ -180,7 +179,7 @@ namespace DisRipper
 
         private void SaveImage(Structs.Img Item, string FileExtension, string Location)
         {
-            FileInfo fileInfo = new FileInfo(NamingUtility.ReplaceInvalidPath($"Downloads/{Item.GuildName}/{Location}/{Item.EmoteName}{FileExtension}", "_"));
+            FileInfo fileInfo = new FileInfo(NamingUtility.ReplaceInvalidPath($"Exports/{Item.GuildName}/{Location}/{Item.EmoteName}{FileExtension}", "_"));
             if(!Directory.Exists(fileInfo.DirectoryName))
                 Directory.CreateDirectory(fileInfo.DirectoryName);
 
