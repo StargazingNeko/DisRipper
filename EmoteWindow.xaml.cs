@@ -61,21 +61,18 @@ namespace DisRipper
             System.Windows.Controls.Image image = new() { Height = 100, Width = 100 };
             foreach(Structs.Img img in e.NewItems)
             {
-                BitmapFrame bitmap = BitmapFrame.Create(img.Stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+                if (Utility.TokenSource.IsCancellationRequested)
+                    return;
 
-                //if (img.Stream == null)
-                //{
-                //    MessageBox.Show("Null Stream!");
-                //    return;
-                //}
+                BitmapFrame bitmap = BitmapFrame.Create(img.MemStream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
 
                 image.Source = bitmap;
-                MemoryStream ms = img.Stream;
+                MemoryStream ms = img.MemStream;
 
                 if(img.Extension == ".gif")
                 {
                     ms.Position = 0;
-                    System.Drawing.Image.FromStream(img.Stream).Save(ms = new MemoryStream(), System.Drawing.Imaging.ImageFormat.Gif);
+                    System.Drawing.Image.FromStream(img.MemStream).Save(ms = new MemoryStream(), System.Drawing.Imaging.ImageFormat.Gif);
                 }
 
                 await db.CreateTable(img.GuildName);
@@ -83,7 +80,6 @@ namespace DisRipper
 
                 DrawEmote(image);
             }
-
         }
 
         public void SetHttpHandler(HttpHandler handler) => httpHandler = handler;
@@ -130,10 +126,15 @@ namespace DisRipper
 
             foreach (string table in db.GetTables().Result)
             {
+                if (Utility.TokenSource.IsCancellationRequested)
+                    return;
+
                 List<Structs.Img> Emotes = db.ReadEmotes(table).Result;
 
                 foreach (Structs.Img item in Emotes)
                 {
+                    if(Utility.TokenSource.IsCancellationRequested)
+                        return;
 
                     string loc = "emotes";
 
@@ -142,7 +143,6 @@ namespace DisRipper
 
                     SaveImage(item, item.Extension, loc);
                 }
-
             }
         }
 
@@ -185,14 +185,14 @@ namespace DisRipper
 
             using (FileStream fs = new(fileInfo.FullName, FileMode.Create))
             {
-                if (Item.Stream == null)
+                if (Item.MemStream == null)
                 {
-                    MessageBox.Show("Null Stream!");
+                    MessageBox.Show("Null MemStream!");
                     return;
                 }
 
-                Item.Stream.Position = 0;
-                Item.Stream.CopyTo(fs);
+                Item.MemStream.Position = 0;
+                Item.MemStream.CopyTo(fs);
             }
         }
 
@@ -203,8 +203,14 @@ namespace DisRipper
             List<string> Tables = await db.GetTables();
             foreach(string Table in Tables)
             {
-                foreach(Structs.Img Img in db.ReadEmotes(Table).Result)
+                if (Utility.TokenSource.IsCancellationRequested)
+                    return;
+
+                foreach (Structs.Img Img in db.ReadEmotes(Table).Result)
                 {
+                    if (Utility.TokenSource.IsCancellationRequested)
+                        return;
+
                     EmoteIds.Add(Img.EmoteId);
                     GuildIds.Add(Img.GuildId);
                 }
@@ -215,12 +221,18 @@ namespace DisRipper
 
             foreach (Structs.GuildInfo guild in Guilds)
             {
+                if (Utility.TokenSource.IsCancellationRequested)
+                    return;
+
                 JObject JGuild = httpHandler?.GetGuild(guild.Id)?.Result;
                 if (JGuild == null)
                     throw new NullReferenceException("EmoteWindow->Continue(): JGuild is null.");
 
                 foreach(JToken Emote in JGuild["emotes"])
                 {
+                    if (Utility.TokenSource.IsCancellationRequested)
+                        return;
+
                     if (!EmoteIds.Contains((ulong)Emote["id"]))
                     {
                         MemoryStream? ms = await httpHandler?.SendRequest((ulong)Emote["id"], false)?.Content.ReadAsStreamAsync() as MemoryStream;
@@ -228,7 +240,6 @@ namespace DisRipper
                     }
                 }
             }
-
         }
 
         bool AutoScroll;
@@ -243,9 +254,13 @@ namespace DisRipper
             if(AutoScroll && e.ExtentHeightChange !=  0) { EmoteScroller.ScrollToVerticalOffset(EmoteScroller.ScrollableHeight); }
         }
 
-        private async void TestButton_Click(object sender, RoutedEventArgs e)
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            await db.GetTables();
+            if (Utility.ResetToken())
+            {
+                throw new Exception("Failed to reset cancelation token!");
+            }
         }
     }
 }

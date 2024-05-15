@@ -14,15 +14,11 @@ namespace DisRipper
             public string EmoteName { readonly get; private set; }
             public string Extension { readonly get; private set; }
             public bool IsSticker { readonly get; private set; }
-            public MemoryStream Stream { readonly get; private set; }
+            public MemoryStream MemStream { readonly get; private set; }
 
-            public Img Create(ulong GuildId, string GuildName, ulong EmoteId, string EmoteName, string Extension, bool IsSticker, MemoryStream Stream)
+            public Img Create(ulong GuildId, string GuildName, ulong EmoteId, string EmoteName, string Extension, bool IsSticker, MemoryStream MemStream)
             {
-                MemoryStream ms = new MemoryStream(0);
-                ms.SetLength(Stream.Length);
-                Stream.CopyTo(ms);
-                Stream.Dispose();
-                return new Img() { GuildId = GuildId, GuildName = GuildName, EmoteId = EmoteId, EmoteName = EmoteName, Extension = Extension, IsSticker = IsSticker, Stream = ms };
+                return new Img() { GuildId = GuildId, GuildName = GuildName, EmoteId = EmoteId, EmoteName = EmoteName, Extension = Extension, IsSticker = IsSticker, MemStream = MemStream };
             }
                 
         }

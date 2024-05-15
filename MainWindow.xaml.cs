@@ -47,7 +47,7 @@ namespace DisRipper
 
             if (bIsTokenSet)
             {
-                ResponseBox.Text = $" {httpHandler.GetLastStatusCode()}: Successfully connected to Discord!, Token confirmed! \n {JObject.Parse(httpHandler.GetTestResponse())}";
+                ResponseBox.Text = $" {httpHandler.GetLastStatusCode()}: Successfully connected to Discord!, TokenSource confirmed! \n {JObject.Parse(httpHandler.GetTestResponse())}";
                 Thread.Sleep(1);
                 GetGuilds();
                 return;
@@ -71,6 +71,9 @@ namespace DisRipper
             {
                 foreach (var item in response)
                 {
+                    if (Utility.TokenSource.IsCancellationRequested)
+                        return;
+
                     if (item != null && item["id"] != null && item["name"] != null)
                         GuildList.Add(guildInfo.Create((ulong)item["id"], (string)item["name"]));
                 }
@@ -79,8 +82,10 @@ namespace DisRipper
 
                 foreach (var item in GuildList)
                 {
-                    ResponseBox.Text = $"{ResponseBox.Text}{item.Get}\n";
+                    if (Utility.TokenSource.IsCancellationRequested)
+                        return;
 
+                    ResponseBox.Text = $"{ResponseBox.Text}{item.Get}\n";
                 }
 
                 if(GuildList != null)
@@ -99,6 +104,9 @@ namespace DisRipper
 
             foreach (var item in GuildList)
             {
+                if(Utility.TokenSource.IsCancellationRequested)
+                    return;
+
                 await IterateEmotes(GetGuild(item.Id));
                 emoteWindow.IncreaseGuildProgress();
                 await Task.Delay(250);
@@ -124,9 +132,10 @@ namespace DisRipper
             string Ext = string.Empty;
             foreach (JToken e in Guild["emojis"])
             {
+                if (Utility.TokenSource.IsCancellationRequested)
+                    return;
 
                 Ext = utility.GetExtension((bool)e["animated"]);
-
                 HttpResponseMessage? response = httpHandler?.SendRequest((ulong)e["id"], false);
 
                 if (response?.StatusCode != System.Net.HttpStatusCode.OK)
@@ -153,6 +162,9 @@ namespace DisRipper
 
             foreach(JToken s in Guild["stickers"])
             {
+                if (Utility.TokenSource.IsCancellationRequested)
+                    return;
+
                 HttpResponseMessage? response = httpHandler?.SendRequest((ulong)s["id"], true);
 
                 if (response?.StatusCode != System.Net.HttpStatusCode.OK)
@@ -183,7 +195,6 @@ namespace DisRipper
             if (string.IsNullOrEmpty(json))
                 return null;
 
-
             return JArray.Parse(json);
         }
 
@@ -192,7 +203,6 @@ namespace DisRipper
             string json = httpHandler?.SendRequest(_discord)?.Content.ReadAsStringAsync().Result ?? string.Empty;
             if (string.IsNullOrEmpty(json))
                 return null;
-
 
             return JObject.Parse(json);
         }
@@ -218,13 +228,22 @@ namespace DisRipper
             {
                 await GetEmotes(GuildID);
             }
-
         }
 
         private async void GetGuildButton_Click(object sender, RoutedEventArgs e)
         {
             Structs.GuildInfo guildInfo = new Structs.GuildInfo();
-            JObject? Guild = GetGuild(Convert.ToUInt64(GuildID.Text));
+            JObject? Guild = new();
+            try
+            {
+                 Guild = GetGuild(Convert.ToUInt64(GuildID.Text));
+            }
+            catch (FormatException ex)
+            {
+                MessageBox.Show("You must click a guild before clicking this button!");
+                return;
+            }
+
             if (Guild == null)
                 return;
 

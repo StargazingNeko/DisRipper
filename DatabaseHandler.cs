@@ -29,7 +29,8 @@ namespace DisRipper
                 return;
             }
 
-            if (_disposed) return;
+            if (_disposed)
+                return;
 
             await _connection.OpenAsync();
 
@@ -60,7 +61,7 @@ namespace DisRipper
 
             using(SQLiteCommand command = _connection.CreateCommand())
             {
-                command.CommandText = $"CREATE TABLE IF NOT EXISTS \"{GuildName}\" (GuildId ULONG NOT NULL, GuildName TEXT NOT NULL, EmoteId ULONG NOT NULL, EmoteName TEXT NOT NULL, Extension TEXT NOT NULL, IsSticker BOOLEAN NOT NULL, Stream BLOB NOT NULL, Exported BOOLEAN NOT NULL)";
+                command.CommandText = $"CREATE TABLE IF NOT EXISTS \"{GuildName}\" (GuildId ULONG NOT NULL, GuildName TEXT NOT NULL, EmoteId ULONG NOT NULL, EmoteName TEXT NOT NULL, Extension TEXT NOT NULL, IsSticker BOOLEAN NOT NULL, MemStream BLOB NOT NULL, Exported BOOLEAN NOT NULL)";
                 await command.ExecuteNonQueryAsync();
             }
 
@@ -73,9 +74,9 @@ namespace DisRipper
             List<string> Tables = new List<string>();
             using (SQLiteCommand command = _connection.CreateCommand())
             {
-
                 command.CommandText = "SELECT name FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%'";
                 DbDataReader reader = await command.ExecuteReaderAsync();
+
                 while (await reader.ReadAsync())
                 {
                     for (int i = 0; i < reader.FieldCount; i++)
@@ -94,21 +95,12 @@ namespace DisRipper
 
             using (SQLiteCommand command = _connection.CreateCommand())
             {
-
                 command.CommandText = $"INSERT INTO \"{GuildName}\" VALUES ({GuildId}, \"{GuildName}\", {EmoteId}, \"{EmoteName}\", \"{Extension}\", {IsSticker}, @0, {false})";
                 SQLiteParameter parameter = new SQLiteParameter("@0", DbType.Binary);
                 parameter.Value = Stream.ToArray();
                 command.Parameters.Add(parameter);
                 await command.ExecuteNonQueryAsync();
             }
-
-            await _connection.CloseAsync();
-        }
-
-        public async Task WriteGuilds()
-        {
-            await _connection.OpenAsync();
-
             await _connection.CloseAsync();
         }
 
@@ -160,7 +152,6 @@ namespace DisRipper
                         await _connection.CloseAsync();
                         return true;
                     }
-
                 }
             }
 

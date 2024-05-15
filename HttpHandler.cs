@@ -42,7 +42,7 @@ namespace DisRipper
         {
             using (var messageRequest = new HttpRequestMessage(HttpMethod.Get, httpClient.BaseAddress+location))
             {
-                if(string.IsNullOrEmpty(token)) { MessageBox.Show("Token is not set!"); return null; }
+                if(string.IsNullOrEmpty(token)) { MessageBox.Show("TokenSource is not set!"); return null; }
 
                 messageRequest.Headers.Add("Authorization", token);
 

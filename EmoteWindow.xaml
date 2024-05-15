@@ -23,7 +23,7 @@
                     <Label x:Name="GuildLabel" Content="Servers (0)" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                 </StackPanel>
                 <Button x:Name="ExportButton" Content=" Export " HorizontalAlignment="Left" Click="ExportButton_Click"/>
-                <Button x:Name="TestButton" Content=" test " Click="TestButton_Click" MaxWidth="50" HorizontalAlignment="Left" Visibility="Hidden"/>
+                <Button x:Name="CancelButton" Content=" Cancel " Click="CancelButton_Click" MaxWidth="50" HorizontalAlignment="Left" Visibility="Visible"/>
             </StackPanel>
 
         </Grid>
