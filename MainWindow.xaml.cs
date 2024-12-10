@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -102,7 +103,7 @@ namespace DisRipper
 
             if (GuildList == null) { MessageBox.Show("GuildList was null!"); return; }
 
-            foreach (var item in GuildList)
+            foreach (Structs.GuildInfo item in GuildList)
             {
                 if(Utility.TokenSource.IsCancellationRequested)
                     return;
@@ -113,6 +114,54 @@ namespace DisRipper
             }
 
             emoteWindow.Reset();
+        }
+
+        private async Task Continue()
+        {
+            Dictionary<ulong, List<ulong>> EmoteCollection = new Dictionary<ulong, List<ulong>>(); // Use GuildID as key for dictionary, store EmoteIDs in list of respective GuildID
+            List<string> Tables = await Utility.db.GetTables();
+            foreach (string Table in Tables)
+            {
+                if (Utility.TokenSource.IsCancellationRequested)
+                    return;
+
+                foreach (Structs.Img Img in Utility.db.ReadEmotes(Table).Result)
+                {
+                    if (Utility.TokenSource.IsCancellationRequested)
+                        return;
+
+                    //EmoteIds.Add(Img.EmoteId);
+                    if (!EmoteCollection.TryAdd(Img.GuildId, new List<ulong>() { Img.EmoteId }))
+                    {
+                        EmoteCollection[Img.GuildId].Add(Img.EmoteId);
+                    }
+                }
+            }
+
+            /*if (Guilds == null)
+                throw new NullReferenceException("EmoteWindow->Continue(): Guilds is null.");
+
+            foreach (Structs.GuildInfo guild in Guilds)
+            {
+                if (Utility.TokenSource.IsCancellationRequested)
+                    return;
+
+                JObject JGuild = httpHandler?.GetGuild(guild.Id)?.Result;
+                if (JGuild == null)
+                    throw new NullReferenceException("EmoteWindow->Continue(): JGuild is null.");
+
+                foreach(JToken Emote in JGuild["emotes"])
+                {
+                    if (Utility.TokenSource.IsCancellationRequested)
+                        return;
+
+                    if (!EmoteIds.Contains((ulong)Emote["id"]))
+                    {
+                        MemoryStream? ms = await httpHandler?.SendRequest((ulong)Emote["id"], (string)Emote[""], false)?.Content.ReadAsStreamAsync() as MemoryStream;
+                        ImageList.Add(new Structs.Img().Create(guild.Id, guild.Name, (ulong)Emote["id"], (string)Emote["name"], utility.GetExtension((bool)Emote["animated"]), false, ms));
+                    }
+                }
+            }*/
         }
 
         private async Task GetEmotes(ulong id)
@@ -130,13 +179,15 @@ namespace DisRipper
             emoteWindow.SetCurrentGuild((ulong)Guild["id"], (string)Guild["name"]);
             MemoryStream? ms;
             string Ext = string.Empty;
+            await Continue();
+
             foreach (JToken e in Guild["emojis"])
             {
                 if (Utility.TokenSource.IsCancellationRequested)
                     return;
 
                 Ext = utility.GetExtension((bool)e["animated"]);
-                HttpResponseMessage? response = httpHandler?.SendRequest((ulong)e["id"], false);
+                HttpResponseMessage? response = httpHandler?.SendRequest((ulong)e["id"], Ext,false);
 
                 if (response?.StatusCode != System.Net.HttpStatusCode.OK)
                 {
@@ -165,7 +216,7 @@ namespace DisRipper
                 if (Utility.TokenSource.IsCancellationRequested)
                     return;
 
-                HttpResponseMessage? response = httpHandler?.SendRequest((ulong)s["id"], true);
+                HttpResponseMessage? response = httpHandler?.SendRequest((ulong)s["id"], ".png", true);
 
                 if (response?.StatusCode != System.Net.HttpStatusCode.OK)
                 {

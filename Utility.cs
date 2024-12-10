@@ -10,6 +10,7 @@ namespace DisRipper
     public class Utility
     {
         public static CancellationTokenSource TokenSource { get; private set; } = new CancellationTokenSource();
+        public static DatabaseHandler db { get; private set; } = new();
 
         public static bool ResetToken()
         {

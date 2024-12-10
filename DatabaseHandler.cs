@@ -10,7 +10,7 @@ using System.Windows;
 
 namespace DisRipper
 {
-    internal class DatabaseHandler
+    public class DatabaseHandler
     {
         private SQLiteConnection _connection;
         private bool _disposed;
@@ -61,7 +61,7 @@ namespace DisRipper
 
             using(SQLiteCommand command = _connection.CreateCommand())
             {
-                command.CommandText = $"CREATE TABLE IF NOT EXISTS \"{GuildName}\" (GuildId ULONG NOT NULL, GuildName TEXT NOT NULL, EmoteId ULONG NOT NULL, EmoteName TEXT NOT NULL, Extension TEXT NOT NULL, IsSticker BOOLEAN NOT NULL, MemStream BLOB NOT NULL, Exported BOOLEAN NOT NULL)";
+                command.CommandText = $"CREATE TABLE IF NOT EXISTS \"{GuildName}\" (GuildId ULONG NOT NULL, GuildName TEXT NOT NULL, EmoteId ULONG NOT NULL UNIQUE, EmoteName TEXT NOT NULL, Extension TEXT NOT NULL, IsSticker BOOLEAN NOT NULL, MemStream BLOB NOT NULL, Exported BOOLEAN NOT NULL)";
                 await command.ExecuteNonQueryAsync();
             }
 
@@ -95,7 +95,7 @@ namespace DisRipper
 
             using (SQLiteCommand command = _connection.CreateCommand())
             {
-                command.CommandText = $"INSERT INTO \"{GuildName}\" VALUES ({GuildId}, \"{GuildName}\", {EmoteId}, \"{EmoteName}\", \"{Extension}\", {IsSticker}, @0, {false})";
+                command.CommandText = $"INSERT OR IGNORE INTO \"{GuildName}\" VALUES ({GuildId}, \"{GuildName}\", {EmoteId}, \"{EmoteName}\", \"{Extension}\", {IsSticker}, @0, {false})";
                 SQLiteParameter parameter = new SQLiteParameter("@0", DbType.Binary);
                 parameter.Value = Stream.ToArray();
                 command.Parameters.Add(parameter);

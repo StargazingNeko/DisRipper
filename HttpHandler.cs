@@ -61,7 +61,7 @@ namespace DisRipper
             }
         }
 
-        public HttpResponseMessage? SendRequest(ulong id, bool sticker = false)
+        public HttpResponseMessage? SendRequest(ulong id, string fileExtension, bool sticker = false)
         {
             Uri location;
 
@@ -75,7 +75,7 @@ namespace DisRipper
                     break;
             }
 
-            using (var messageRequest = new HttpRequestMessage(HttpMethod.Get, $"{location}{id}{Lossless}"))
+            using (var messageRequest = new HttpRequestMessage(HttpMethod.Get, $"{location}{id}{fileExtension}{Lossless}"))
             {
                 HttpResponseMessage response = httpClient.SendAsync(messageRequest).Result;
                 try

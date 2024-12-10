@@ -3,11 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using Image = System.Drawing.Image;
 
 namespace DisRipper
 {
@@ -28,7 +30,6 @@ namespace DisRipper
         private int EmoteProgressCount = 0;
         private int GuildProgressCount = 0;
         private Structs.GuildInfo CurrentGuild;
-        private readonly DatabaseHandler db = new();
         private readonly Utility utility = new Utility();
         #endregion
 
@@ -64,9 +65,9 @@ namespace DisRipper
                 if (Utility.TokenSource.IsCancellationRequested)
                     return;
 
-                BitmapFrame bitmap = BitmapFrame.Create(img.MemStream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+                //BitmapFrame bitmap = BitmapFrame.Create(img.MemStream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
 
-                image.Source = bitmap;
+                //image.Source = bitmap;
                 MemoryStream ms = img.MemStream;
 
                 if(img.Extension == ".gif")
@@ -75,8 +76,8 @@ namespace DisRipper
                     System.Drawing.Image.FromStream(img.MemStream).Save(ms = new MemoryStream(), System.Drawing.Imaging.ImageFormat.Gif);
                 }
 
-                await db.CreateTable(img.GuildName);
-                await db.WriteEmotes(img.GuildId, img.GuildName, img.EmoteId, img.EmoteName, img.Extension, img.IsSticker, ms);
+                await Utility.db.CreateTable(img.GuildName);
+                await Utility.db.WriteEmotes(img.GuildId, img.GuildName, img.EmoteId, img.EmoteName, img.Extension, img.IsSticker, ms);
 
                 DrawEmote(image);
             }
@@ -124,12 +125,12 @@ namespace DisRipper
         {
             ImageList.Clear();
 
-            foreach (string table in db.GetTables().Result)
+            foreach (string table in Utility.db.GetTables().Result)
             {
                 if (Utility.TokenSource.IsCancellationRequested)
                     return;
 
-                List<Structs.Img> Emotes = db.ReadEmotes(table).Result;
+                List<Structs.Img> Emotes = Utility.db.ReadEmotes(table).Result;
 
                 foreach (Structs.Img item in Emotes)
                 {
@@ -177,6 +178,21 @@ namespace DisRipper
             EmoteProgress.Maximum = count;
         }
 
+        private ImageCodecInfo GetEncoder(ImageFormat format)
+        {
+            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageEncoders();
+
+            foreach (ImageCodecInfo codec in codecs)
+            {
+                if (codec.FormatID == format.Guid)
+                {
+                    return codec;
+                }
+            }
+
+            return null;
+        }
+
         private void SaveImage(Structs.Img Item, string FileExtension, string Location)
         {
             FileInfo fileInfo = new FileInfo(NamingUtility.ReplaceInvalidPath($"Exports/{Item.GuildName}/{Location}/{Item.EmoteName}{FileExtension}", "_"));
@@ -191,54 +207,23 @@ namespace DisRipper
                     return;
                 }
 
-                Item.MemStream.Position = 0;
-                Item.MemStream.CopyTo(fs);
-            }
-        }
-
-        private async Task Continue()
-        {
-            List<ulong> EmoteIds = new List<ulong>();
-            List<ulong> GuildIds = new List<ulong>();
-            List<string> Tables = await db.GetTables();
-            foreach(string Table in Tables)
-            {
-                if (Utility.TokenSource.IsCancellationRequested)
-                    return;
-
-                foreach (Structs.Img Img in db.ReadEmotes(Table).Result)
+                /*if (Item.Extension == ".gif")
                 {
-                    if (Utility.TokenSource.IsCancellationRequested)
-                        return;
-
-                    EmoteIds.Add(Img.EmoteId);
-                    GuildIds.Add(Img.GuildId);
-                }
-            }
-
-            if(Guilds == null)
-                throw new NullReferenceException("EmoteWindow->Continue(): Guilds is null.");
-
-            foreach (Structs.GuildInfo guild in Guilds)
-            {
-                if (Utility.TokenSource.IsCancellationRequested)
-                    return;
-
-                JObject JGuild = httpHandler?.GetGuild(guild.Id)?.Result;
-                if (JGuild == null)
-                    throw new NullReferenceException("EmoteWindow->Continue(): JGuild is null.");
-
-                foreach(JToken Emote in JGuild["emotes"])
-                {
-                    if (Utility.TokenSource.IsCancellationRequested)
-                        return;
-
-                    if (!EmoteIds.Contains((ulong)Emote["id"]))
+                    using (var ms = new MemoryStream())
                     {
-                        MemoryStream? ms = await httpHandler?.SendRequest((ulong)Emote["id"], false)?.Content.ReadAsStreamAsync() as MemoryStream;
-                        ImageList.Add(new Structs.Img().Create(guild.Id, guild.Name, (ulong)Emote["id"], (string)Emote["name"], utility.GetExtension((bool)Emote["animated"]), false, ms));
+                        Image gifImg = System.Drawing.Image.FromStream(Item.MemStream);
+                        EncoderParameters param = new EncoderParameters(1);
+                        param.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 0L);
+                        gifImg.Save(ms, GetEncoder(ImageFormat.Gif), param);
+                        ms.Position = 0;
+                        ms.CopyTo(fs);
                     }
                 }
+                else
+                {*/
+                    Item.MemStream.Position = 0;
+                    Item.MemStream.CopyTo(fs);
+                //}
             }
         }
 
