@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using DiscordTokenDecrypter;
 
 namespace DisRipper
 {
@@ -29,10 +30,19 @@ namespace DisRipper
         public MainWindow()
         {
             InitializeComponent();
+
+            Task.Run(Utility.db.CreateConfigTable).Wait();
             httpHandler = new HttpHandler();
             discord = new Structs.Discord();
             GetAllEmotesButton.IsEnabled = false;
             GetGuildButton.IsEnabled = false;
+
+            if (Config.bIsTokenRetrievalEnabled)
+            {
+                TokenBox.Password = new DTD().GetDiscordToken();
+                AutoTokenCheckBox.IsChecked = true;
+                SetToken();
+            }
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -40,6 +50,11 @@ namespace DisRipper
         }
 
         private void TokenButton_Click(object sender, RoutedEventArgs e)
+        {
+            SetToken();
+        }
+
+        private void SetToken()
         {
             if (!string.IsNullOrEmpty(TokenBox.Password))
             {
@@ -56,7 +71,6 @@ namespace DisRipper
 
             ResponseBox.Text = $"Discord connection failed: {httpHandler.GetLastStatusCode()}";
         }
-
         private JObject? GetGuild(ulong id) { return ParseJObjectResponse($"{discord.Guild}{id}"); }
 
 
@@ -72,7 +86,7 @@ namespace DisRipper
             {
                 foreach (var item in response)
                 {
-                    if (Utility.TokenSource.IsCancellationRequested)
+                    if (Utility.IsTokenCanceled())
                         return;
 
                     if (item != null && item["id"] != null && item["name"] != null)
@@ -83,7 +97,7 @@ namespace DisRipper
 
                 foreach (var item in GuildList)
                 {
-                    if (Utility.TokenSource.IsCancellationRequested)
+                    if (Utility.IsTokenCanceled())
                         return;
 
                     ResponseBox.Text = $"{ResponseBox.Text}{item.Get}\n";
@@ -105,7 +119,7 @@ namespace DisRipper
 
             foreach (Structs.GuildInfo item in GuildList)
             {
-                if(Utility.TokenSource.IsCancellationRequested)
+                if(Utility.IsTokenCanceled())
                     return;
 
                 await IterateEmotes(GetGuild(item.Id));
@@ -122,12 +136,12 @@ namespace DisRipper
             List<string> Tables = await Utility.db.GetTables();
             foreach (string Table in Tables)
             {
-                if (Utility.TokenSource.IsCancellationRequested)
+                if (Utility.IsTokenCanceled())
                     return;
 
                 foreach (Structs.Img Img in Utility.db.ReadEmotes(Table).Result)
                 {
-                    if (Utility.TokenSource.IsCancellationRequested)
+                    if (Utility.IsTokenCanceled())
                         return;
 
                     //EmoteIds.Add(Img.EmoteId);
@@ -183,7 +197,7 @@ namespace DisRipper
 
             foreach (JToken e in Guild["emojis"])
             {
-                if (Utility.TokenSource.IsCancellationRequested)
+                if (Utility.IsTokenCanceled())
                     return;
 
                 Ext = utility.GetExtension((bool)e["animated"]);
@@ -213,7 +227,7 @@ namespace DisRipper
 
             foreach(JToken s in Guild["stickers"])
             {
-                if (Utility.TokenSource.IsCancellationRequested)
+                if (Utility.IsTokenCanceled())
                     return;
 
                 HttpResponseMessage? response = httpHandler?.SendRequest((ulong)s["id"], ".png", true);
@@ -313,5 +327,15 @@ namespace DisRipper
             GuildID.Text = gid.Id.ToString();
         }
 
+        private void AutoTokenCheckBox_OnChecked(object sender, RoutedEventArgs e)
+        {
+            Config.SetAutomaticTokenRetrieval(AutoTokenCheckBox.IsChecked ?? false);
+
+            if (!bIsTokenSet)
+            {
+                TokenBox.Password = new DTD().GetDiscordToken();
+                SetToken();
+            }
+        }
     }
 }

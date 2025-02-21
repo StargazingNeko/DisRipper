@@ -19,6 +19,9 @@
     <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DiscordTokenDecrypter\DiscordTokenDecrypter.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <None Update="data.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace DisRipper
 {
     public class Utility
     {
-        public static CancellationTokenSource TokenSource { get; private set; } = new CancellationTokenSource();
+        private static CancellationTokenSource TokenSource { get; set; } = new CancellationTokenSource();
         public static DatabaseHandler db { get; private set; } = new();
 
         public static bool ResetToken()
@@ -22,23 +24,25 @@ namespace DisRipper
 
         public static bool IsTokenCanceled()
         {
+            if (TokenSource.Token.IsCancellationRequested)
+                MessageBox.Show("Task canceled");
+
             return TokenSource.Token.IsCancellationRequested;
+        }
+
+        public static CancellationToken GetCancellationToken()
+        {
+            return TokenSource.Token;
         }
 
         public string GetExtension(bool IsAnimated)
         {
-            if (IsAnimated)
-                return ".gif";
-
-            return ".webp";
+            return IsAnimated ? ".gif" : ".webp";
         }
 
         public string GetExtension(int FormatType)
         {
-            if (FormatType == 2)
-                return ".png";
-
-            return ".webp";
+            return FormatType == 2 ? ".png" : ".webp";
         }
     }
 }

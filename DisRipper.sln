@@ -5,6 +5,8 @@ VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DisRipper", "DisRipper.csproj", "{D4D99A24-C1B3-4558-96AA-5116F8E85575}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscordTokenDecrypter", "..\DiscordTokenDecrypter\DiscordTokenDecrypter.csproj", "{7ECD1EAF-0088-473E-8D09-C23557815514}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{D4D99A24-C1B3-4558-96AA-5116F8E85575}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4D99A24-C1B3-4558-96AA-5116F8E85575}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4D99A24-C1B3-4558-96AA-5116F8E85575}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7ECD1EAF-0088-473E-8D09-C23557815514}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7ECD1EAF-0088-473E-8D09-C23557815514}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7ECD1EAF-0088-473E-8D09-C23557815514}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7ECD1EAF-0088-473E-8D09-C23557815514}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

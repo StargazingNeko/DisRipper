@@ -27,6 +27,9 @@ namespace DisRipper
 
         private bool TestConnection()
         {
+            if (Utility.IsTokenCanceled())
+                return false;
+
             HttpResponseMessage? request = SendRequest(discord.Self);
             if (request?.StatusCode == HttpStatusCode.OK)
             {
@@ -40,6 +43,9 @@ namespace DisRipper
 
         public HttpResponseMessage? SendRequest(string location)
         {
+            if (Utility.IsTokenCanceled())
+                return null;
+
             using (var messageRequest = new HttpRequestMessage(HttpMethod.Get, httpClient.BaseAddress+location))
             {
                 if(string.IsNullOrEmpty(token)) { MessageBox.Show("TokenSource is not set!"); return null; }
@@ -63,6 +69,9 @@ namespace DisRipper
 
         public HttpResponseMessage? SendRequest(ulong id, string fileExtension, bool sticker = false)
         {
+            if (Utility.IsTokenCanceled())
+                return null;
+
             Uri location;
 
             switch (sticker)
@@ -94,6 +103,9 @@ namespace DisRipper
 
         public bool SetToken(string token)
         {
+            if (Utility.IsTokenCanceled())
+                return false;
+
             this.token = token;
             return TestConnection();
         }
@@ -108,8 +120,11 @@ namespace DisRipper
             return TestResponseString ?? string.Empty;
         }
 
-        public async Task<JObject> GetGuild(ulong GuildId)
+        public async Task<JObject?> GetGuild(ulong GuildId)
         {
+            if (Utility.IsTokenCanceled())
+                return null;
+
             HttpResponseMessage? Response = SendRequest($"{discord.Guild}");
             try
             {

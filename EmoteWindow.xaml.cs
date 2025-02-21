@@ -62,7 +62,7 @@ namespace DisRipper
             System.Windows.Controls.Image image = new() { Height = 100, Width = 100 };
             foreach(Structs.Img img in e.NewItems)
             {
-                if (Utility.TokenSource.IsCancellationRequested)
+                if (Utility.IsTokenCanceled())
                     return;
 
                 //BitmapFrame bitmap = BitmapFrame.Create(img.MemStream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
@@ -127,14 +127,14 @@ namespace DisRipper
 
             foreach (string table in Utility.db.GetTables().Result)
             {
-                if (Utility.TokenSource.IsCancellationRequested)
+                if (Utility.IsTokenCanceled())
                     return;
 
                 List<Structs.Img> Emotes = Utility.db.ReadEmotes(table).Result;
 
                 foreach (Structs.Img item in Emotes)
                 {
-                    if(Utility.TokenSource.IsCancellationRequested)
+                    if(Utility.IsTokenCanceled())
                         return;
 
                     string loc = "emotes";

@@ -39,10 +39,10 @@ namespace DisRipper
                 switch (Values.Count())
                 {
                     case 3:
-                        command.CommandText = $"INSERT INTO Guilds VALUES ({Values[0]},{Values[1]},{Values[2]})";
+                        command.CommandText = $"INSERT INTO Guilds VALUES ({Values[0]},{Values[1]},{Values[2]});";
                         break;
                     case 8:
-                        command.CommandText = $"INSERT INTO Emotes VALUES ({Values[0]},\"{Values[1]}\",{Values[2]},\"{Values[3]}\",\"{Values[4]}\",{Values[5]},@0,{Values[7]})";
+                        command.CommandText = $"INSERT INTO Emotes VALUES ({Values[0]},\"{Values[1]}\",{Values[2]},\"{Values[3]}\",\"{Values[4]}\",{Values[5]},@0,{Values[7]});";
                         SQLiteParameter parameter = new SQLiteParameter("@0", DbType.Binary);
                         parameter.Value = Values[6];
                         command.Parameters.Add(parameter);
@@ -53,6 +53,64 @@ namespace DisRipper
             }
 
             await _connection.CloseAsync();
+        }
+
+        public async Task CreateConfigTable()
+        {
+            await _connection.OpenAsync();
+            using (SQLiteCommand command = _connection.CreateCommand())
+            {
+                command.CommandText = $"CREATE TABLE IF NOT EXISTS \"Config\" (\"Option\" TEXT NOT NULL UNIQUE, \"Value\" DYNAMIC NOT NULL UNIQUE, PRIMARY KEY (\"Option\")); INSERT OR IGNORE INTO \"Config\" VALUES (\"bAutomaticallyRetrieveToken\", {false});";
+                await command.ExecuteNonQueryAsync();
+            }
+
+            await _connection.CloseAsync();
+        }
+
+        public async Task UpdateConfigTable(string ConfigOption, dynamic Value)
+        {
+            await _connection.OpenAsync();
+            using (SQLiteCommand command = _connection.CreateCommand())
+            {
+                int RowID = 0;
+                switch (ConfigOption)
+                {
+                    case "bAutomaticallyRetrieveToken":
+                        RowID = 1;
+                        break;
+                }
+
+                if (RowID == 0)
+                {
+                    MessageBox.Show("Error updating config.");
+                    return;
+                }
+
+                command.CommandText = $"UPDATE Config SET Value = {Value} WHERE ROWID = {RowID}";
+                await command.ExecuteNonQueryAsync();
+            }
+
+            await _connection.CloseAsync();
+        }
+
+        public async Task<dynamic> GetConfigValue(string ConfigOption)
+        {
+            dynamic value = false;
+            await _connection.OpenAsync();
+            using (SQLiteCommand command = _connection.CreateCommand())
+            {
+                command.CommandText = $"SELECT Value FROM Config WHERE Option = '{ConfigOption}';";
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        value = reader.GetBoolean(0);
+                    }
+                }
+            }
+
+            await _connection.CloseAsync();
+            return value;
         }
 
         public async Task CreateTable(string GuildName)
@@ -68,7 +126,7 @@ namespace DisRipper
             await _connection.CloseAsync();
         }
 
-        public async Task<List<string>> GetTables()
+        public async Task<List<string>?> GetTables()
         {
             await _connection.OpenAsync();
             List<string> Tables = new List<string>();
@@ -81,6 +139,9 @@ namespace DisRipper
                 {
                     for (int i = 0; i < reader.FieldCount; i++)
                     {
+                        if (Utility.IsTokenCanceled())
+                            return null;
+
                         Tables.Add(reader.GetString(i));
                     }
                 }
@@ -104,7 +165,7 @@ namespace DisRipper
             await _connection.CloseAsync();
         }
 
-        public async Task<List<Structs.Img>> ReadEmotes(string TABLE)
+        public async Task<List<Structs.Img>?> ReadEmotes(string TABLE)
         {
             if (_disposed) return null;
 
@@ -158,6 +219,8 @@ namespace DisRipper
             await _connection.CloseAsync();
             return false;
         }
+
+
 
         public void Dispose()
         {
