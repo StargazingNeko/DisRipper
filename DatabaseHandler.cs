@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Documents;
 
 namespace DisRipper
 {
@@ -189,13 +190,43 @@ namespace DisRipper
                             reader.GetValue(4).ToString(),
                             bool.Parse(reader.GetValue(5).ToString()),
                             ms));
-
                     }
 
                     await _connection.CloseAsync();
                     return list;
                 };
             }
+        }
+
+        public async Task<Structs.Img?> GetSingularEmote(string GuildName, ulong EmoteID)
+        {
+            if (_disposed) return null;
+
+            Structs.Img? Emote = null;
+            await using (SQLiteCommand command = _connection.CreateCommand())
+            {
+                await _connection.OpenAsync();
+                command.CommandText = $"SELECT * FROM '{GuildName}' WHERE EmoteId = '{EmoteID}'";
+
+                await using (var reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        Stream readStream = reader.GetStream(6);
+                        MemoryStream ms = new MemoryStream(new byte[readStream.Length], true);
+                        Emote = new Structs.Img().Create(Convert.ToUInt64(reader.GetValue(0)),
+                            reader.GetValue(1).ToString(),
+                            Convert.ToUInt64(reader.GetValue(2)),
+                            reader.GetValue(3).ToString(),
+                            reader.GetValue(4).ToString(),
+                            bool.Parse(reader.GetValue(5).ToString()),
+                            ms);
+                    }
+                }
+            }
+
+            await _connection.CloseAsync();
+            return Emote;
         }
 
         private async Task<bool> TableExists(ulong GuildId)

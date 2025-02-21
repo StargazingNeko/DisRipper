@@ -130,19 +130,28 @@ namespace DisRipper
             emoteWindow.Reset();
         }
 
-        private async Task Continue()
+        private async Task<Dictionary<ulong, List<ulong>>?> GetExistingEmotes()
         {
             Dictionary<ulong, List<ulong>> EmoteCollection = new Dictionary<ulong, List<ulong>>(); // Use GuildID as key for dictionary, store EmoteIDs in list of respective GuildID
             List<string> Tables = await Utility.db.GetTables();
+            
+            if (Tables.Contains("Config"))
+            {
+                Tables.Remove("Config");
+            }
+
+            if (Tables.Count == 0)
+                return null;
+
             foreach (string Table in Tables)
             {
                 if (Utility.IsTokenCanceled())
-                    return;
+                    return null;
 
                 foreach (Structs.Img Img in Utility.db.ReadEmotes(Table).Result)
                 {
                     if (Utility.IsTokenCanceled())
-                        return;
+                        return null;
 
                     //EmoteIds.Add(Img.EmoteId);
                     if (!EmoteCollection.TryAdd(Img.GuildId, new List<ulong>() { Img.EmoteId }))
@@ -152,30 +161,7 @@ namespace DisRipper
                 }
             }
 
-            /*if (Guilds == null)
-                throw new NullReferenceException("EmoteWindow->Continue(): Guilds is null.");
-
-            foreach (Structs.GuildInfo guild in Guilds)
-            {
-                if (Utility.TokenSource.IsCancellationRequested)
-                    return;
-
-                JObject JGuild = httpHandler?.GetGuild(guild.Id)?.Result;
-                if (JGuild == null)
-                    throw new NullReferenceException("EmoteWindow->Continue(): JGuild is null.");
-
-                foreach(JToken Emote in JGuild["emotes"])
-                {
-                    if (Utility.TokenSource.IsCancellationRequested)
-                        return;
-
-                    if (!EmoteIds.Contains((ulong)Emote["id"]))
-                    {
-                        MemoryStream? ms = await httpHandler?.SendRequest((ulong)Emote["id"], (string)Emote[""], false)?.Content.ReadAsStreamAsync() as MemoryStream;
-                        ImageList.Add(new Structs.Img().Create(guild.Id, guild.Name, (ulong)Emote["id"], (string)Emote["name"], utility.GetExtension((bool)Emote["animated"]), false, ms));
-                    }
-                }
-            }*/
+            return EmoteCollection;
         }
 
         private async Task GetEmotes(ulong id)
@@ -189,19 +175,92 @@ namespace DisRipper
             if (Guild == null)
                 return;
 
-            emoteWindow.SetEmoteCount(Guild["emojis"].ToList().Count+Guild["stickers"].ToList().Count);
+            emoteWindow.SetEmoteCount(Guild["emojis"].ToList().Count + Guild["stickers"].ToList().Count);
             emoteWindow.SetCurrentGuild((ulong)Guild["id"], (string)Guild["name"]);
-            MemoryStream? ms;
-            string Ext = string.Empty;
-            await Continue();
+            Guild["name"] = NamingUtility.ReplaceInvalidFilename(Guild["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", ""), "_");
+
+            Dictionary<ulong, List<ulong>>? ExistingEmotes = GetExistingEmotes().Result;
+
+            if (ExistingEmotes == null)
+                ExistingEmotes = new Dictionary<ulong, List<ulong>>();
 
             foreach (JToken e in Guild["emojis"])
             {
                 if (Utility.IsTokenCanceled())
                     return;
 
-                Ext = utility.GetExtension((bool)e["animated"]);
-                HttpResponseMessage? response = httpHandler?.SendRequest((ulong)e["id"], Ext,false);
+                if (ExistingEmotes.ContainsKey((ulong)Guild["id"]))
+                {
+                    Structs.Img? Emote;
+                    if (ExistingEmotes[(ulong)Guild["id"]].Contains((ulong)e["id"]))
+                    {
+                        Emote = Utility.db.GetSingularEmote((string)Guild["name"],
+                            (ulong)e["id"]).Result;
+
+                        if (Emote == null)
+                            return;
+
+                        await emoteWindow.AddImage(Emote.Value.GuildId, Emote.Value.GuildName, Emote.Value.EmoteId,
+                            Emote.Value.EmoteName, Emote.Value.Extension, Emote.Value.IsSticker,
+                            Emote.Value.MemStream);
+                        emoteWindow.IncreaseEmoteProgress();
+                    }
+                    else
+                    {
+                        await RetrieveImageFromNet((string)Guild["name"], (ulong)Guild["id"], e, false);
+                    }
+
+                }
+                else
+                {
+                    await RetrieveImageFromNet((string)Guild["name"], (ulong)Guild["id"], e, false);
+                }
+
+            }
+
+            foreach (JToken s in Guild["stickers"])
+            {
+                if (Utility.IsTokenCanceled())
+                    return;
+
+                if (ExistingEmotes.ContainsKey((ulong)Guild["id"]))
+                {
+                    Structs.Img? Emote;
+                    if (ExistingEmotes[(ulong)Guild["id"]].Contains((ulong)s["id"]))
+                    {
+                        Emote = Utility.db.GetSingularEmote((string)Guild["name"], (ulong)s["id"]).Result;
+
+                        if (Emote == null)
+                            return;
+
+                        await emoteWindow.AddImage(Emote.Value.GuildId, Emote.Value.GuildName, Emote.Value.EmoteId,
+                            Emote.Value.EmoteName, Emote.Value.Extension, Emote.Value.IsSticker,
+                            Emote.Value.MemStream);
+                        emoteWindow.IncreaseEmoteProgress();
+                    }
+                    else
+                    {
+                        await RetrieveImageFromNet((string)Guild["name"], (ulong)Guild["id"], s, true);
+                    }
+                }
+                else
+                {
+                    await RetrieveImageFromNet((string)Guild["name"], (ulong)Guild["id"], s, true);
+                }
+            }
+
+            emoteWindow.ResetEmoteCount();
+        }
+
+        private async Task RetrieveImageFromNet(string Guild, ulong GuildID, JToken Emote, bool IsSticker)
+        {
+            MemoryStream? ms;
+            string Ext = string.Empty;
+
+            if (!IsSticker)
+            {
+                Ext = utility.GetExtension((bool)Emote["animated"]);
+                HttpResponseMessage? response = httpHandler?.SendRequest((ulong)Emote["id"], Ext, false);
 
                 if (response?.StatusCode != System.Net.HttpStatusCode.OK)
                 {
@@ -219,18 +278,13 @@ namespace DisRipper
                     ResponseStream.CopyTo(ms);
                 }
 
-                await emoteWindow.AddImage((ulong)Guild["id"], NamingUtility.ReplaceInvalidFilename(Guild["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", ""), "_"), (ulong)e["id"], NamingUtility.ReplaceInvalidFilename($"{e["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", "").Replace(" ", "")}", "_"), Ext, false, ms as MemoryStream);
+                await emoteWindow.AddImage(GuildID, Guild, (ulong)Emote["id"], NamingUtility.ReplaceInvalidFilename($"{Emote["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", "").Replace(" ", "")}", "_"), Ext, false, ms as MemoryStream);
 
-                emoteWindow.IncreaseEmoteProgress();
-                await Task.Delay(1);
+                await Task.Delay(1000);
             }
-
-            foreach(JToken s in Guild["stickers"])
+            else
             {
-                if (Utility.IsTokenCanceled())
-                    return;
-
-                HttpResponseMessage? response = httpHandler?.SendRequest((ulong)s["id"], ".png", true);
+                HttpResponseMessage? response = httpHandler?.SendRequest((ulong)Emote["id"], ".png", true);
 
                 if (response?.StatusCode != System.Net.HttpStatusCode.OK)
                 {
@@ -242,16 +296,16 @@ namespace DisRipper
                 }
                 else
                 {
-                    Ext = utility.GetExtension((int)s["format_type"]);
+                    Ext = utility.GetExtension((int)Emote["format_type"]);
                     ms = response.Content?.ReadAsStreamAsync().Result as MemoryStream;
                 }
 
-                await emoteWindow.AddImage((ulong)Guild["id"], NamingUtility.ReplaceInvalidFilename(Guild["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", ""), "_"), (ulong)s["id"], NamingUtility.ReplaceInvalidFilename($"{s["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", "").Replace(" ", "")}", "_"), Ext, true, ms);
-                emoteWindow.IncreaseEmoteProgress();
-                await Task.Delay(1500);
+                await emoteWindow.AddImage(GuildID, Guild, (ulong)Emote["id"], NamingUtility.ReplaceInvalidFilename($"{Emote["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", "").Replace(" ", "")}", "_"), Ext, true, ms);
+
+                await Task.Delay(1000);
             }
 
-            emoteWindow.ResetEmoteCount();
+            emoteWindow.IncreaseEmoteProgress();
         }
 
         private JArray? ParseJArrayResponse(string _discord)

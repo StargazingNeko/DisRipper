@@ -9,7 +9,7 @@
     <StackPanel>
         <Grid MaxHeight="400" Height="400">
             <ScrollViewer x:Name="EmoteScroller" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" ScrollChanged="EmoteScroller_ScrollChanged">
-                <WrapPanel x:Name="EmotePanel" Margin="5,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Orientation="Horizontal"/>
+               <WrapPanel x:Name="EmotePanel" Margin="5,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Orientation="Horizontal"/>
             </ScrollViewer>
         </Grid>
         <Grid>

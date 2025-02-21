@@ -52,8 +52,12 @@ namespace DisRipper
 
         }
 
+        private void ImageList_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            UpdateImageList(sender, e);
+        }
 
-        private async void ImageList_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        private async Task UpdateImageList (object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             //Add emote to database here
             if (e.NewItems == null)
@@ -65,9 +69,6 @@ namespace DisRipper
                 if (Utility.IsTokenCanceled())
                     return;
 
-                //BitmapFrame bitmap = BitmapFrame.Create(img.MemStream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
-
-                //image.Source = bitmap;
                 MemoryStream ms = img.MemStream;
 
                 if(img.Extension == ".gif")
