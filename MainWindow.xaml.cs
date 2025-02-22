@@ -177,7 +177,7 @@ namespace DisRipper
 
             emoteWindow.SetEmoteCount(Guild["emojis"].ToList().Count + Guild["stickers"].ToList().Count);
             emoteWindow.SetCurrentGuild((ulong)Guild["id"], (string)Guild["name"]);
-            Guild["name"] = NamingUtility.ReplaceInvalidFilename(Guild["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", ""), "_");
+            Guild["name"] = NamingUtility.ReplaceInvalidFilename(Guild["name"].ToString(), "_");
 
             Dictionary<ulong, List<ulong>>? ExistingEmotes = GetExistingEmotes().Result;
 
@@ -191,11 +191,19 @@ namespace DisRipper
 
                 if (ExistingEmotes.ContainsKey((ulong)Guild["id"]))
                 {
-                    Structs.Img? Emote;
+                    Structs.Img? Emote = null;
                     if (ExistingEmotes[(ulong)Guild["id"]].Contains((ulong)e["id"]))
                     {
-                        Emote = Utility.db.GetSingularEmote((string)Guild["name"],
-                            (ulong)e["id"]).Result;
+                        try
+                        {
+                            Emote = Utility.db.GetSingularEmote((string)Guild["name"],
+                                (ulong)e["id"]).Result;
+
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"{(string)Guild["name"]}: {(string)e["id"]}\n\n{ex}");
+                        }
 
                         if (Emote == null)
                             return;
@@ -278,7 +286,7 @@ namespace DisRipper
                     ResponseStream.CopyTo(ms);
                 }
 
-                await emoteWindow.AddImage(GuildID, Guild, (ulong)Emote["id"], NamingUtility.ReplaceInvalidFilename($"{Emote["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", "").Replace(" ", "")}", "_"), Ext, false, ms as MemoryStream);
+                await emoteWindow.AddImage(GuildID, Guild, (ulong)Emote["id"], NamingUtility.ReplaceInvalidFilename($"{Emote["name"]}", "_"), Ext, false, ms as MemoryStream);
 
                 await Task.Delay(1000);
             }
@@ -300,7 +308,7 @@ namespace DisRipper
                     ms = response.Content?.ReadAsStreamAsync().Result as MemoryStream;
                 }
 
-                await emoteWindow.AddImage(GuildID, Guild, (ulong)Emote["id"], NamingUtility.ReplaceInvalidFilename($"{Emote["name"].ToString().Replace(":", "").Replace(",", "").Replace(".", "").Replace(" ", "")}", "_"), Ext, true, ms);
+                await emoteWindow.AddImage(GuildID, Guild, (ulong)Emote["id"], NamingUtility.ReplaceInvalidFilename($"{Emote["name"]}", "_"), Ext, true, ms);
 
                 await Task.Delay(1000);
             }

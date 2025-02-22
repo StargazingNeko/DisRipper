@@ -30,7 +30,6 @@ namespace DisRipper
         private int EmoteProgressCount = 0;
         private int GuildProgressCount = 0;
         private Structs.GuildInfo CurrentGuild;
-        private readonly Utility utility = new Utility();
         #endregion
 
         public EmoteWindow()

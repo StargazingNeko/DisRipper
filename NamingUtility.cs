@@ -29,7 +29,7 @@ namespace DisRipper
                     chars[i] = newChar;
             }
 
-            return new string(chars);
+            return new string(chars).Replace(":", "").Replace(",", "").Replace(".", "").Replace("'", "");
         }
 
         public static string ReplaceInvalidPath(string fileName, string newValue)
@@ -47,10 +47,5 @@ namespace DisRipper
             return new string(chars);
         }
 
-        public static string CleanName(string fileName)
-        {
-            string CleanedString = fileName.Replace(":", "").Replace(",", "").Replace(".", "").Replace(" ", "");
-            return  CleanedString;
-        }
     }
 }
