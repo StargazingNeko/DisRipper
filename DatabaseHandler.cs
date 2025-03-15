@@ -214,6 +214,8 @@ namespace DisRipper
                     {
                         Stream readStream = reader.GetStream(6);
                         MemoryStream ms = new MemoryStream(new byte[readStream.Length], true);
+                        await readStream.CopyToAsync(ms);
+                        ms.Position = 0;
                         Emote = new Structs.Img().Create(Convert.ToUInt64(reader.GetValue(0)),
                             reader.GetValue(1).ToString(),
                             Convert.ToUInt64(reader.GetValue(2)),

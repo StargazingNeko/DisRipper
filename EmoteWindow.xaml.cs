@@ -1,16 +1,15 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
-using Image = System.Drawing.Image;
-
+ 
 namespace DisRipper
 {
     /// <summary>
@@ -62,7 +61,7 @@ namespace DisRipper
             if (e.NewItems == null)
                 return;
 
-            System.Windows.Controls.Image image = new() { Height = 100, Width = 100 };
+            System.Windows.Controls.Image ImageControl = new() { Height = 100, Width = 100};
             foreach(Structs.Img img in e.NewItems)
             {
                 if (Utility.IsTokenCanceled())
@@ -70,16 +69,20 @@ namespace DisRipper
 
                 MemoryStream ms = img.MemStream;
 
-                if(img.Extension == ".gif")
-                {
-                    ms.Position = 0;
+                if (img.Extension == ".gif")
                     System.Drawing.Image.FromStream(img.MemStream).Save(ms = new MemoryStream(), System.Drawing.Imaging.ImageFormat.Gif);
-                }
+                
+                //Test code.
+                if(img.EmoteName == "BLMBlob")
+                    await File.WriteAllBytesAsync("test.png", ms.ToArray());
 
+                BitmapFrame bitmap = BitmapFrame.Create(ms, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+                ImageControl.Source = bitmap;
+                
                 await Utility.db.CreateTable(img.GuildName);
                 await Utility.db.WriteEmotes(img.GuildId, img.GuildName, img.EmoteId, img.EmoteName, img.Extension, img.IsSticker, ms);
 
-                DrawEmote(image);
+                DrawEmote(ImageControl);
             }
         }
 

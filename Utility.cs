@@ -37,12 +37,12 @@ namespace DisRipper
 
         public string GetExtension(bool IsAnimated)
         {
-            return IsAnimated ? ".gif" : ".webp";
+            return IsAnimated ? ".gif" : ".png";
         }
 
         public string GetExtension(int FormatType)
         {
-            return FormatType == 2 ? ".png" : ".webp";
+            return FormatType == 2 ? ".gif" : ".png";
         }
     }
 }
