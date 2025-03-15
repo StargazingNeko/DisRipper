@@ -134,12 +134,8 @@ namespace DisRipper
                 List<Structs.Img> Emotes = Utility.db.ReadEmotes(table).Result;
                 foreach (Structs.Img item in Emotes.Where(item => !Utility.IsTokenCanceled()))
                 {
-                    //if (Utility.IsTokenCanceled())
-                    //    return;
-
                     string loc = item.IsSticker ? "stickers" : "emotes";
                     SaveImage(item, item.Extension, loc);
-
                 }
             }
         }

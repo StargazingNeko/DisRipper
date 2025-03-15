@@ -44,6 +44,7 @@ namespace DisRipper
                 SetToken();
             }
         }
+
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             Application.Current.Shutdown();
@@ -63,7 +64,8 @@ namespace DisRipper
 
             if (bIsTokenSet)
             {
-                ResponseBox.Text = $" {httpHandler.GetLastStatusCode()}: Successfully connected to Discord!, TokenSource confirmed! \n {JObject.Parse(httpHandler.GetTestResponse())}";
+                ResponseBox.Text =
+                    $" {httpHandler.GetLastStatusCode()}: Successfully connected to Discord!, TokenSource confirmed! \n {JObject.Parse(httpHandler.GetTestResponse())}";
                 Thread.Sleep(1);
                 GetGuilds();
                 return;
@@ -71,7 +73,11 @@ namespace DisRipper
 
             ResponseBox.Text = $"Discord connection failed: {httpHandler.GetLastStatusCode()}";
         }
-        private JObject? GetGuild(ulong id) { return ParseJObjectResponse($"{discord.Guild}{id}"); }
+
+        private JObject? GetGuild(ulong id)
+        {
+            return ParseJObjectResponse($"{discord.Guild}{id}");
+        }
 
 
 
@@ -103,7 +109,7 @@ namespace DisRipper
                     ResponseBox.Text = $"{ResponseBox.Text}{item.Get}\n";
                 }
 
-                if(GuildList != null)
+                if (GuildList != null)
                 {
                     GetGuildButton.IsEnabled = true;
                     GetAllEmotesButton.IsEnabled = true;
@@ -115,11 +121,15 @@ namespace DisRipper
         {
             emoteWindow.ClearEmotesAndStickers();
 
-            if (GuildList == null) { MessageBox.Show("GuildList was null!"); return; }
+            if (GuildList == null)
+            {
+                MessageBox.Show("GuildList was null!");
+                return;
+            }
 
             foreach (Structs.GuildInfo item in GuildList)
             {
-                if(Utility.IsTokenCanceled())
+                if (Utility.IsTokenCanceled())
                     return;
 
                 await IterateEmotes(GetGuild(item.Id));
@@ -132,9 +142,11 @@ namespace DisRipper
 
         private async Task<Dictionary<ulong, List<ulong>>?> GetExistingEmotes()
         {
-            Dictionary<ulong, List<ulong>> EmoteCollection = new Dictionary<ulong, List<ulong>>(); // Use GuildID as key for dictionary, store EmoteIDs in list of respective GuildID
+            Dictionary<ulong, List<ulong>>
+                EmoteCollection =
+                    new Dictionary<ulong, List<ulong>>(); // Use GuildID as key for dictionary, store EmoteIDs in list of respective GuildID
             List<string> Tables = await Utility.db.GetTables();
-            
+
             if (Tables.Contains("Config"))
             {
                 Tables.Remove("Config");
@@ -286,7 +298,8 @@ namespace DisRipper
                     ResponseStream.CopyTo(ms);
                 }
 
-                await emoteWindow.AddImage(GuildID, Guild, (ulong)Emote["id"], NamingUtility.ReplaceInvalidFilename($"{Emote["name"]}", "_"), Ext, false, ms as MemoryStream);
+                await emoteWindow.AddImage(GuildID, Guild, (ulong)Emote["id"],
+                    NamingUtility.ReplaceInvalidFilename($"{Emote["name"]}", "_"), Ext, false, ms as MemoryStream);
 
                 await Task.Delay(1000);
             }
@@ -308,7 +321,8 @@ namespace DisRipper
                     ms = response.Content?.ReadAsStreamAsync().Result as MemoryStream;
                 }
 
-                await emoteWindow.AddImage(GuildID, Guild, (ulong)Emote["id"], NamingUtility.ReplaceInvalidFilename($"{Emote["name"]}", "_"), Ext, true, ms);
+                await emoteWindow.AddImage(GuildID, Guild, (ulong)Emote["id"],
+                    NamingUtility.ReplaceInvalidFilename($"{Emote["name"]}", "_"), Ext, true, ms);
 
                 await Task.Delay(1000);
             }
@@ -342,7 +356,12 @@ namespace DisRipper
 
         private async Task EmoteWindow(ulong GuildID = 0)
         {
-            if (!bIsEmoteWindowShown) { emoteWindow.Show(); emoteWindow.SetHttpHandler(httpHandler); bIsEmoteWindowShown = true; }
+            if (!bIsEmoteWindowShown)
+            {
+                emoteWindow.Show();
+                emoteWindow.SetHttpHandler(httpHandler);
+                bIsEmoteWindowShown = true;
+            }
 
             emoteWindow.BringIntoView();
             emoteWindow.SetGuilds(GuildList);
@@ -363,7 +382,7 @@ namespace DisRipper
             JObject? Guild = new();
             try
             {
-                 Guild = GetGuild(Convert.ToUInt64(GuildID.Text));
+                Guild = GetGuild(Convert.ToUInt64(GuildID.Text));
             }
             catch (FormatException ex)
             {
@@ -389,14 +408,20 @@ namespace DisRipper
             GuildID.Text = gid.Id.ToString();
         }
 
-        private void AutoTokenCheckBox_OnChecked(object sender, RoutedEventArgs e)
+        private void AutoTokenCheckBox_OnCheckedChanged(object sender, RoutedEventArgs e)
         {
             Config.SetAutomaticTokenRetrieval(AutoTokenCheckBox.IsChecked ?? false);
 
-            if (!bIsTokenSet)
+            if (!bIsTokenSet && AutoTokenCheckBox.IsChecked == true)
             {
-                TokenBox.Password = new DTD().GetDiscordToken();
-                SetToken();
+                if (string.IsNullOrEmpty(TokenBox.Password = new DTD().GetDiscordToken() ?? string.Empty))
+                {
+                    MessageBox.Show("Unable to automatically retrieve Discord token!\nTry restarting Discord, if that doesn't work relog.");
+                }
+                else
+                {
+                    SetToken();
+                }
             }
         }
     }

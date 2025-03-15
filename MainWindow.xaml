@@ -8,7 +8,7 @@
         Title="MainWindow" Height="490" Width="1300" Closing="Window_Closing">
     <Grid>
         <PasswordBox x:Name="TokenBox" HorizontalAlignment="Left" Margin="940,406,0,0" VerticalAlignment="Top" Width="255"/>
-        <CheckBox x:Name="AutoTokenCheckBox" Margin="939.5,427,0,0" Checked="AutoTokenCheckBox_OnChecked">Automatically retrieve token</CheckBox>
+        <CheckBox x:Name="AutoTokenCheckBox" Margin="939.5,427,0,0" Checked="AutoTokenCheckBox_OnCheckedChanged" Unchecked="AutoTokenCheckBox_OnCheckedChanged">Automatically retrieve token</CheckBox>
         <Button x:Name="TokenButton" Content=" Set Token " HorizontalAlignment="Left" Margin="1200,405,0,0" VerticalAlignment="Top" Click="TokenButton_Click"/>
         <TextBox x:Name="ResponseBox" HorizontalAlignment="Left" Margin="940,10,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="330" Height="380" IsReadOnly="True"/>
         <TextBox x:Name="GuildID" HorizontalAlignment="Left" Margin="10,405,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="250"/>
