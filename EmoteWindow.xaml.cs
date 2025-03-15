@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -128,24 +129,17 @@ namespace DisRipper
         {
             ImageList.Clear();
 
-            foreach (string table in Utility.db.GetTables().Result)
+            foreach (string table in Utility.db.GetTables().Result.Where(table => table != "Config" && !Utility.IsTokenCanceled()))
             {
-                if (Utility.IsTokenCanceled())
-                    return;
-
                 List<Structs.Img> Emotes = Utility.db.ReadEmotes(table).Result;
-
-                foreach (Structs.Img item in Emotes)
+                foreach (Structs.Img item in Emotes.Where(item => !Utility.IsTokenCanceled()))
                 {
-                    if(Utility.IsTokenCanceled())
-                        return;
+                    //if (Utility.IsTokenCanceled())
+                    //    return;
 
-                    string loc = "emotes";
-
-                    if (item.IsSticker)
-                        loc = "stickers";
-
+                    string loc = item.IsSticker ? "stickers" : "emotes";
                     SaveImage(item, item.Extension, loc);
+
                 }
             }
         }

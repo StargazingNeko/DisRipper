@@ -173,7 +173,7 @@ namespace DisRipper
             using (SQLiteCommand command = _connection.CreateCommand())
             {
                 await _connection.OpenAsync();
-                command.CommandText = $"SELECT * FROM \"{TABLE}\"";
+                command.CommandText = $"SELECT * FROM '{TABLE}' WHERE NOT 'Config'";
 
                 using (var reader = command.ExecuteReader())
                 {
