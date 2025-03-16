@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -86,6 +87,10 @@ namespace DisRipper
 
             using (var messageRequest = new HttpRequestMessage(HttpMethod.Get, $"{location}{id}{fileExtension}{Lossless}"))
             {
+#if DEBUG
+                File.AppendAllText("urls.txt", $"{messageRequest.RequestUri.ToString()}\n");
+#endif
+
                 HttpResponseMessage response = httpClient.SendAsync(messageRequest).Result;
                 try
                 {

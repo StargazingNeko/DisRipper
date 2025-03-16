@@ -70,12 +70,11 @@ namespace DisRipper
 
                 MemoryStream ms = img.MemStream;
 
+                /*
+                This loses almost all data, for now we'll just save it as an apng...
+
                 if (img.Extension == ".gif")
-                    System.Drawing.Image.FromStream(img.MemStream).Save(ms = new MemoryStream(), System.Drawing.Imaging.ImageFormat.Gif);
-                
-                //Test code.
-                if(img.EmoteName == "BLMBlob")
-                    await File.WriteAllBytesAsync("test.png", ms.ToArray());
+                    System.Drawing.Image.FromStream(img.MemStream).Save(ms = new MemoryStream(), System.Drawing.Imaging.ImageFormat.Gif);*/
 
                 BitmapFrame bitmap = BitmapFrame.Create(ms, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
                 ImageControl.Source = bitmap;
@@ -188,8 +187,11 @@ namespace DisRipper
 
         private void SaveImage(Structs.Img Item, string FileExtension, string Location)
         {
-            FileInfo fileInfo = new FileInfo(NamingUtility.ReplaceInvalidPath($"Exports/{Item.GuildName}/{Location}/{Item.EmoteName}{FileExtension}", "_"));
-            if(!Directory.Exists(fileInfo.DirectoryName))
+            FileInfo fileInfo =
+                new FileInfo(
+                    NamingUtility.ReplaceInvalidPath(
+                        $"Exports/{Item.GuildName}/{Location}/{Item.EmoteName}{FileExtension}", "_"));
+            if (!Directory.Exists(fileInfo.DirectoryName))
                 Directory.CreateDirectory(fileInfo.DirectoryName);
 
             using (FileStream fs = new(fileInfo.FullName, FileMode.Create))
@@ -200,23 +202,8 @@ namespace DisRipper
                     return;
                 }
 
-                /*if (Item.Extension == ".gif")
-                {
-                    using (var ms = new MemoryStream())
-                    {
-                        Image gifImg = System.Drawing.Image.FromStream(Item.MemStream);
-                        EncoderParameters param = new EncoderParameters(1);
-                        param.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 0L);
-                        gifImg.Save(ms, GetEncoder(ImageFormat.Gif), param);
-                        ms.Position = 0;
-                        ms.CopyTo(fs);
-                    }
-                }
-                else
-                {*/
-                    Item.MemStream.Position = 0;
-                    Item.MemStream.CopyTo(fs);
-                //}
+                Item.MemStream.Position = 0;
+                Item.MemStream.CopyTo(fs);
             }
         }
 

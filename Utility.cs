@@ -42,7 +42,16 @@ namespace DisRipper
 
         public string GetExtension(int FormatType)
         {
-            return FormatType == 2 ? ".gif" : ".png";
+            //return FormatType == 2 ? ".gif" : ".png";
+            //==============================================================
+            //* Discord converts and stores gifs to apng.
+            //* For whatever reason they will not let you access
+            //* the original gifs when it comes to stickers unlike emotes.
+            //* Will likely work on gif conversion in the future.
+            //* For now save as ".apng" so it's at least
+            //* distinguishable which are animated and which one are not.
+            //*==============================================================
+            return FormatType == 2 ? ".apng" : ".png";
         }
     }
 }
