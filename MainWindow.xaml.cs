@@ -43,11 +43,21 @@ namespace DisRipper
                 AutoTokenCheckBox.IsChecked = true;
                 SetToken();
             }
+
+            Utility._PrintToResponseBox += PrintToResponseBox;
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             Application.Current.Shutdown();
+        }
+
+        private void PrintToResponseBox(object? sender, EventArgs e)
+        {
+            Utility.PrintEventArgs? args = e as Utility.PrintEventArgs;
+
+            if(args != null)
+                ResponseBox.Text = ResponseBox.Text+"\n"+args.Str;
         }
 
         private void TokenButton_Click(object sender, RoutedEventArgs e)
@@ -65,7 +75,7 @@ namespace DisRipper
             if (bIsTokenSet)
             {
                 ResponseBox.Text =
-                    $" {httpHandler.GetLastStatusCode()}: Successfully connected to Discord!, TokenSource confirmed! \n {JObject.Parse(httpHandler.GetTestResponse())}";
+                    $" {httpHandler.GetLastStatusCode()}: Successfully connected to Discord.";
                 Thread.Sleep(1);
                 GetGuilds();
                 return;
@@ -99,14 +109,10 @@ namespace DisRipper
                         GuildList.Add(guildInfo.Create((ulong)item["id"], (string)item["name"]));
                 }
 
-                ResponseBox.Clear();
-
                 foreach (var item in GuildList)
                 {
                     if (Utility.IsTokenCanceled())
                         return;
-
-                    ResponseBox.Text = $"{ResponseBox.Text}{item.Get}\n";
                 }
 
                 if (GuildList != null)
@@ -123,7 +129,7 @@ namespace DisRipper
 
             if (GuildList == null)
             {
-                MessageBox.Show("GuildList was null!");
+                Utility.PrintToResponseBox(this, new Utility.PrintEventArgs("GuildList was null!"));
                 return;
             }
 
@@ -165,7 +171,6 @@ namespace DisRipper
                     if (Utility.IsTokenCanceled())
                         return null;
 
-                    //EmoteIds.Add(Img.EmoteId);
                     if (!EmoteCollection.TryAdd(Img.GuildId, new List<ulong>() { Img.EmoteId }))
                     {
                         EmoteCollection[Img.GuildId].Add(Img.EmoteId);
@@ -214,7 +219,7 @@ namespace DisRipper
                         }
                         catch (Exception ex)
                         {
-                            MessageBox.Show($"{(string)Guild["name"]}: {(string)e["id"]}\n\n{ex}");
+                            Utility.PrintToResponseBox(this, new Utility.PrintEventArgs($"{(string)Guild["name"]}: {(string)e["id"]}\n\n{ex}"));
                         }
 
                         if (Emote == null)
@@ -229,13 +234,11 @@ namespace DisRipper
                     {
                         await RetrieveImageFromNet((string)Guild["name"], (ulong)Guild["id"], e, false);
                     }
-
                 }
                 else
                 {
                     await RetrieveImageFromNet((string)Guild["name"], (ulong)Guild["id"], e, false);
                 }
-
             }
 
             foreach (JToken s in Guild["stickers"])
@@ -287,7 +290,7 @@ namespace DisRipper
                     using (FileStream fs = File.OpenRead("Error.bmp"))
                     {
                         ms = new MemoryStream((byte)fs.Length);
-                        fs.CopyTo(ms);
+                        await fs.CopyToAsync(ms);
                     }
                 }
                 else
@@ -295,13 +298,11 @@ namespace DisRipper
                     MemoryStream ResponseStream = response.Content?.ReadAsStreamAsync().Result as MemoryStream;
                     ms = new MemoryStream(0);
                     ms.SetLength(ResponseStream.Length);
-                    ResponseStream.CopyTo(ms);
+                    await ResponseStream.CopyToAsync(ms);
                 }
 
-                await emoteWindow.AddImage(GuildID, Guild, (ulong)Emote["id"],
-                    NamingUtility.ReplaceInvalidFilename($"{Emote["name"]}", "_"), Ext, false, ms as MemoryStream);
-
-                await Task.Delay(1000);
+                await emoteWindow.AddImage(GuildID, Guild, (ulong)Emote["id"], NamingUtility.ReplaceInvalidFilename($"{Emote["name"]}", "_"), Ext, false, ms as MemoryStream);
+                await Task.Delay(new Random().Next(250, 1000));
             }
             else
             {
@@ -312,7 +313,7 @@ namespace DisRipper
                     using (FileStream fs = File.OpenRead("Error.bmp"))
                     {
                         ms = new MemoryStream((byte)fs.Length);
-                        fs.CopyTo(ms);
+                        await fs.CopyToAsync(ms);
                     }
                 }
                 else
@@ -324,7 +325,7 @@ namespace DisRipper
                 await emoteWindow.AddImage(GuildID, Guild, (ulong)Emote["id"],
                     NamingUtility.ReplaceInvalidFilename($"{Emote["name"]}", "_"), Ext, true, ms);
 
-                await Task.Delay(1000);
+                await Task.Delay(new Random().Next(250, 1000));
             }
 
             emoteWindow.IncreaseEmoteProgress();
@@ -386,7 +387,7 @@ namespace DisRipper
             }
             catch (FormatException ex)
             {
-                MessageBox.Show("You must click a guild before clicking this button!");
+                Utility.PrintToResponseBox(this, new Utility.PrintEventArgs("You must click a guild before clicking this button!"));
                 return;
             }
 
@@ -416,7 +417,7 @@ namespace DisRipper
             {
                 if (string.IsNullOrEmpty(TokenBox.Password = new DTD().GetDiscordToken() ?? string.Empty))
                 {
-                    MessageBox.Show("Unable to automatically retrieve Discord token!\nTry restarting Discord, if that doesn't work relog.");
+                    Utility.PrintToResponseBox(this, new Utility.PrintEventArgs("Unable to automatically retrieve Discord token!\nTry restarting Discord, if that doesn't work relog."));
                 }
                 else
                 {

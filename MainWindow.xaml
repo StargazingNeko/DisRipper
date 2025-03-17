@@ -16,6 +16,5 @@
         <Button x:Name="GetAllEmotesButton" Content=" Get All Emotes " HorizontalAlignment="Left" Margin="338,405,0,0" VerticalAlignment="Top" Click="GetAllEmotes_Click"/>
         <Button x:Name="GetGuildButton" Content=" Get Guild " HorizontalAlignment="Left" Margin="265,405,0,0" VerticalAlignment="Top" Click="GetGuildButton_Click"/>
         <DataGrid x:Name="GuildGrid" HorizontalAlignment="Left" Margin="15,10,0,0" VerticalAlignment="Top" Width="920" Height="380" IsReadOnly="True" MouseDoubleClick="GuildGrid_MouseDoubleClick" SelectionChanged="GuildGrid_SelectionChanged"/>
-
     </Grid>
 </Window>

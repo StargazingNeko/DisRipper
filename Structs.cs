@@ -1,6 +1,4 @@
-﻿using System.DirectoryServices;
-using System.Drawing.Printing;
-using System.IO;
+﻿using System.IO;
 
 namespace DisRipper
 {

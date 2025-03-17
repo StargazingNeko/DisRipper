@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Documents;
 
 namespace DisRipper
 {
@@ -231,34 +230,17 @@ namespace DisRipper
             return Emote;
         }
 
-        private async Task<bool> TableExists(ulong GuildId)
-        {
-            if (_connection.State != ConnectionState.Open)
-                await _connection.OpenAsync();
-
-            using (SQLiteCommand command = _connection.CreateCommand())
-            {
-                using (SQLiteDataReader reader = command.ExecuteReader())
-                {
-                    if (reader.HasRows)
-                    {
-                        reader.Close();
-                        await _connection.CloseAsync();
-                        return true;
-                    }
-                }
-            }
-
-            await _connection.CloseAsync();
-            return false;
-        }
-
-
-
         public void Dispose()
         {
-            _connection.Close();
-            _connection.Dispose();
+            try
+            {
+                _connection.Close();
+                _connection.Dispose();
+            }
+            catch(Exception ex)
+            {
+
+            }
             _disposed = true;
         }
     }

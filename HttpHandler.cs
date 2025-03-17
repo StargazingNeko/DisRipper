@@ -49,8 +49,7 @@ namespace DisRipper
 
             using (var messageRequest = new HttpRequestMessage(HttpMethod.Get, httpClient.BaseAddress+location))
             {
-                if(string.IsNullOrEmpty(token)) { MessageBox.Show("TokenSource is not set!"); return null; }
-
+                if(string.IsNullOrEmpty(token)) { Utility.PrintToResponseBox(this, new Utility.PrintEventArgs("TokenSource is not set!")); return null; }
                 messageRequest.Headers.Add("Authorization", token);
 
                 HttpResponseMessage response = httpClient.SendAsync(messageRequest).Result;
@@ -60,7 +59,7 @@ namespace DisRipper
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"{ex.Message}\n\n{response.Content.ReadAsStringAsync().Result}");
+                    Utility.PrintToResponseBox(this, new Utility.PrintEventArgs($"{ex.Message}\n\n{response.Content.ReadAsStringAsync().Result}"));
                     return null;
                 }
 
@@ -98,7 +97,7 @@ namespace DisRipper
                 }
                 catch(Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    Utility.PrintToResponseBox(this, new Utility.PrintEventArgs($"{ex.Message}"));
                     return null;
                 }
 
@@ -144,7 +143,7 @@ namespace DisRipper
             }
             catch(HttpRequestException ex)
             {
-                MessageBox.Show($"HttpHandler->GetGuild: {ex.HttpRequestError}");
+                Utility.PrintToResponseBox(this, new Utility.PrintEventArgs($"HttpHandler->GetGuild: {ex.HttpRequestError}"));
                 return null;
             }
 

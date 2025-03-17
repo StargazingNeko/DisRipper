@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace DisRipper
@@ -13,6 +9,7 @@ namespace DisRipper
     {
         private static CancellationTokenSource TokenSource { get; set; } = new CancellationTokenSource();
         public static DatabaseHandler db { get; private set; } = new();
+        public static event System.EventHandler _PrintToResponseBox;
 
         public static bool ResetToken()
         {
@@ -53,5 +50,27 @@ namespace DisRipper
             //*==============================================================
             return FormatType == 2 ? ".apng" : ".png";
         }
+
+        public class PrintEventArgs : EventArgs
+        {
+            private string StringToPrint;
+
+            public PrintEventArgs(string StringToPrint)
+            {
+                this.StringToPrint = StringToPrint;
+            }
+
+            public string Str
+            {
+                get { return this.StringToPrint; }
+            }
+        }
+
+        public static void PrintToResponseBox(object sender, PrintEventArgs str)
+        {
+            if (_PrintToResponseBox != null)
+                _PrintToResponseBox(sender, str);
+        }
+
     }
 }

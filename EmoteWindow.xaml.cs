@@ -222,6 +222,8 @@ namespace DisRipper
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
+            Utility.PrintToResponseBox(this, new Utility.PrintEventArgs($"Canceled"));
+
             if (Utility.ResetToken())
             {
                 throw new Exception("Failed to reset cancelation token!");
